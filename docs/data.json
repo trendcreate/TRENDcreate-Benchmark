@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T06:52:14+00:00",
-  "count": 4,
+  "generated": "2026-06-27T06:53:19+00:00",
+  "count": 5,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -16,6 +16,21 @@
       "gpu_vcalc": null,
       "runs": 2,
       "last": "2026-06-27T15:11:21+09:00"
+    },
+    {
+      "combo": "AMD_Ryzen_7_5700X3D_8-Core_Processor__N_A",
+      "cpu": "AMD Ryzen 7 5700X3D 8-Core Processor           ",
+      "gpu": null,
+      "arch": "AMD64",
+      "cores": "8",
+      "threads": 16,
+      "l3": "96 MB",
+      "vram_mb": null,
+      "single": 4603.3,
+      "multi": 38347.6,
+      "gpu_vcalc": null,
+      "runs": 1,
+      "last": "2026-06-27T06:53:19+00:00"
     },
     {
       "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
