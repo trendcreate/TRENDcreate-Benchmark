@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T08:54:12+00:00",
-  "count": 8,
+  "generated": "2026-06-27T23:27:12+00:00",
+  "count": 9,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__AMD_Radeon_TM_Graphics",
@@ -113,6 +113,22 @@
       "gpu_vcalc": 9529.8,
       "runs": 1,
       "last": "2026-06-27T07:25:12+00:00"
+    },
+    {
+      "combo": "Intel_R_Core_TM_i3-8100_CPU_3.60GHz__NVIDIA_GeForce_GT_1030",
+      "cpu": "Intel(R) Core(TM) i3-8100 CPU @ 3.60GHz",
+      "gpu": "NVIDIA GeForce GT 1030",
+      "arch": "AMD64",
+      "cores": "4",
+      "threads": 4,
+      "cpu_mhz": 3600.0,
+      "l3": "6 MB",
+      "vram_mb": 2048.0,
+      "single": 1523.8,
+      "multi": 4108.0,
+      "gpu_vcalc": 540.5,
+      "runs": 1,
+      "last": "2026-06-27T23:27:12+00:00"
     },
     {
       "combo": "Intel_R_Xeon_R_Gold_6230_CPU_2.10GHz__N_A",
