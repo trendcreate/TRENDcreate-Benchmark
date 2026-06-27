@@ -1,0 +1,32 @@
+{
+  "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__AMD_Radeon_TM_Graphics",
+  "system": {
+    "cpu_model": "AMD Ryzen 7 4700U with Radeon Graphics",
+    "architecture": "AMD64",
+    "cores_per_socket": "8",
+    "logical_processors": 8,
+    "cpu_mhz": 2000.0,
+    "l3_cache": "8 MB",
+    "gpu_name": "AMD Radeon(TM) Graphics",
+    "gpu_vram_mb": 512.0,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 1553.2,
+    "cpu_multi": 5259.7,
+    "gpu_vcalc": 53.0,
+    "multi_ratio": 0.42
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-27T08:54:12+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 1553.2,
+        "cpu_multi": 5259.7,
+        "gpu_vcalc": 53.0,
+        "multi_ratio": 0.42
+      }
+    }
+  ]
+}

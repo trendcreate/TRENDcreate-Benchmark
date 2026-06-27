@@ -1,7 +1,23 @@
 {
-  "generated": "2026-06-27T08:22:47+00:00",
-  "count": 7,
+  "generated": "2026-06-27T08:54:12+00:00",
+  "count": 8,
   "entries": [
+    {
+      "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__AMD_Radeon_TM_Graphics",
+      "cpu": "AMD Ryzen 7 4700U with Radeon Graphics",
+      "gpu": "AMD Radeon(TM) Graphics",
+      "arch": "AMD64",
+      "cores": "8",
+      "threads": 8,
+      "cpu_mhz": 2000.0,
+      "l3": "8 MB",
+      "vram_mb": 512.0,
+      "single": 1553.2,
+      "multi": 5259.7,
+      "gpu_vcalc": 53.0,
+      "runs": 1,
+      "last": "2026-06-27T08:54:12+00:00"
+    },
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
       "cpu": "AMD Ryzen 7 4700U with Radeon Graphics         ",
