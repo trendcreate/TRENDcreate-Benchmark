@@ -1,0 +1,51 @@
+{
+  "generated": "2026-06-27T06:29:49+00:00",
+  "count": 3,
+  "entries": [
+    {
+      "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
+      "cpu": "AMD Ryzen 7 4700U with Radeon Graphics         ",
+      "gpu": null,
+      "arch": "AMD64",
+      "cores": "8",
+      "threads": 8,
+      "l3": "8 MB",
+      "vram_mb": null,
+      "single": 967.4,
+      "multi": 4386.1,
+      "gpu_vcalc": null,
+      "runs": 2,
+      "last": "2026-06-27T15:11:21+09:00"
+    },
+    {
+      "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
+      "cpu": "Intel(R) Atom(TM) CPU N455   @ 1.66GHz",
+      "gpu": null,
+      "arch": "i686",
+      "cores": "1",
+      "threads": 2,
+      "l3": "N/A",
+      "vram_mb": null,
+      "single": 484.4,
+      "multi": 653.1,
+      "gpu_vcalc": null,
+      "runs": 1,
+      "last": "2026-06-28T00:14:05+09:00"
+    },
+    {
+      "combo": "Intel_R_Atom_TM_x7-Z8700_CPU_1.60GHz__N_A",
+      "cpu": "Intel(R) Atom(TM) x7-Z8700  CPU @ 1.60GHz",
+      "gpu": null,
+      "arch": "AMD64",
+      "cores": "4",
+      "threads": 4,
+      "l3": "N/A",
+      "vram_mb": null,
+      "single": 615.5,
+      "multi": 2080.0,
+      "gpu_vcalc": null,
+      "runs": 1,
+      "last": "2026-06-27T15:00:25+09:00"
+    }
+  ]
+}

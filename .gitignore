@@ -1,0 +1,4 @@
+*.zip
+*.tmp
+score/*.tmp
+__pycache__/

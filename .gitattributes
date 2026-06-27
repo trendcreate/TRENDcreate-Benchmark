@@ -1,0 +1,8 @@
+# Enforce correct line endings regardless of contributor OS settings
+*.sh   text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+# Windows batch files must keep CRLF as-is (even in ZIP downloads / raw view)
+*.bat  -text

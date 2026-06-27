@@ -1,0 +1,43 @@
+{
+  "combo": "Intel_R_Atom_TM_x7-Z8700_CPU_1.60GHz__N_A",
+  "system": {
+    "cpu_model": "Intel(R) Atom(TM) x7-Z8700  CPU @ 1.60GHz",
+    "architecture": "AMD64",
+    "cores_per_socket": "4",
+    "logical_processors": 4,
+    "l3_cache": "N/A",
+    "gpu_name": null,
+    "gpu_vram_mb": null,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 615.5,
+    "cpu_multi": 2080.0,
+    "multi_ratio": 0.84
+  },
+  "runs": [
+    {
+      "schema": "tc_bench/score/v1",
+      "timestamp": "2026-06-27T15:00:25+09:00",
+      "os": "Windows-11-10.0.26100-SP0",
+      "system": {
+        "cpu_model": "Intel(R) Atom(TM) x7-Z8700  CPU @ 1.60GHz",
+        "architecture": "AMD64",
+        "cores_per_socket": "4",
+        "logical_processors": 4,
+        "l3_cache": "N/A",
+        "gpu_name": null,
+        "gpu_vram_mb": null,
+        "gpu_sm_clock_mhz": null
+      },
+      "scores": {
+        "cpu_single": 615.5,
+        "cpu_multi": 2080.0,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.84,
+        "single_time_s": 16.246,
+        "multi_time_s": 19.231
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
+  "system": {
+    "cpu_model": "AMD Ryzen 7 4700U with Radeon Graphics         ",
+    "architecture": "AMD64",
+    "cores_per_socket": "8",
+    "logical_processors": 8,
+    "l3_cache": "8 MB",
+    "gpu_name": null,
+    "gpu_vram_mb": null,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 967.4,
+    "cpu_multi": 4386.1,
+    "multi_ratio": 0.61
+  },
+  "runs": [
+    {
+      "schema": "tc_bench/score/v1",
+      "timestamp": "2026-06-27T14:39:33+09:00",
+      "os": "Windows-10-10.0.26200-SP0",
+      "system": {
+        "cpu_model": "AMD Ryzen 7 4700U with Radeon Graphics         ",
+        "architecture": "AMD64",
+        "cores_per_socket": "8",
+        "logical_processors": 8,
+        "l3_cache": "8 MB",
+        "gpu_name": null,
+        "gpu_vram_mb": null,
+        "gpu_sm_clock_mhz": null
+      },
+      "scores": {
+        "cpu_single": 967.4,
+        "cpu_multi": 4386.1,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.57,
+        "single_time_s": 10.337,
+        "multi_time_s": 18.24
+      }
+    },
+    {
+      "schema": "tc_bench/score/v1",
+      "timestamp": "2026-06-27T15:11:21+09:00",
+      "os": "Windows-10-10.0.26200-SP0",
+      "system": {
+        "cpu_model": "AMD Ryzen 7 4700U with Radeon Graphics         ",
+        "architecture": "AMD64",
+        "cores_per_socket": "8",
+        "logical_processors": 8,
+        "l3_cache": "8 MB",
+        "gpu_name": null,
+        "gpu_vram_mb": null,
+        "gpu_sm_clock_mhz": null
+      },
+      "scores": {
+        "cpu_single": 832.0,
+        "cpu_multi": 4045.9,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.61,
+        "single_time_s": 12.02,
+        "multi_time_s": 19.773
+      }
+    }
+  ]
+}

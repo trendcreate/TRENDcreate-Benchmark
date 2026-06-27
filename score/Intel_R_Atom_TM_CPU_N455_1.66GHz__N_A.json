@@ -1,0 +1,43 @@
+{
+  "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
+  "system": {
+    "cpu_model": "Intel(R) Atom(TM) CPU N455   @ 1.66GHz",
+    "architecture": "i686",
+    "cores_per_socket": "1",
+    "logical_processors": 2,
+    "l3_cache": "N/A",
+    "gpu_name": null,
+    "gpu_vram_mb": null,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 484.4,
+    "cpu_multi": 653.1,
+    "multi_ratio": 0.67
+  },
+  "runs": [
+    {
+      "schema": "tc_bench/score/v1",
+      "timestamp": "2026-06-28T00:14:05+09:00",
+      "os": "Linux-5.10.240-antix.1-486-smp-i686-with-glibc2.41",
+      "system": {
+        "cpu_model": "Intel(R) Atom(TM) CPU N455   @ 1.66GHz",
+        "architecture": "i686",
+        "cores_per_socket": "1",
+        "logical_processors": 2,
+        "l3_cache": "N/A",
+        "gpu_name": null,
+        "gpu_vram_mb": null,
+        "gpu_sm_clock_mhz": null
+      },
+      "scores": {
+        "cpu_single": 484.4,
+        "cpu_multi": 653.1,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.67,
+        "single_time_s": 20.644,
+        "multi_time_s": 30.623
+      }
+    }
+  ]
+}
