@@ -122,6 +122,8 @@
   }
   textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   code{background:rgba(0,0,0,.35);border:1px solid var(--panel-brd);padding:1px 7px;border-radius:6px;color:var(--gold);font-family:var(--mono);font-size:12px}
+  pre{background:rgba(0,0,0,.35);border:1px solid var(--panel-brd);border-radius:14px;padding:14px 16px;overflow:auto;margin:12px 0;color:var(--fg)}
+  pre code{background:transparent;border:0;padding:0;color:var(--fg);font-size:12px}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   .foot{text-align:center;color:var(--faint);font-size:12px;margin-top:36px;font-family:var(--mono)}
@@ -243,8 +245,8 @@
     <h2>もっと正式に投稿するには (Pull Request)</h2>
     <ol style="font-size:13px;color:var(--fg)">
       <li>このリポジトリを Fork する</li>
-      <li>あなたの <code>score/*.json</code> を <code>score/</code> に追加</li>
-      <li><code>python tools/build_pages.py</code> を実行して <code>docs/data.json</code> を更新</li>
+      <li><code>python Tc_bench.py</code> で生成した <code>score/*.json</code> を <code>score/</code> に追加</li>
+      <li><code>python tools/build_pages.py</code> を実行して <code>docs/data.json</code> とローカル確認用 <code>summary.html</code> を生成</li>
       <li>Pull Request を送る → マージされるとこのボードに反映されます</li>
     </ol>
     <p class="muted" style="font-size:12px">

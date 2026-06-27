@@ -1,4 +1,5 @@
 *.zip
 *.tmp
 score/*.tmp
+summary.html
 __pycache__/

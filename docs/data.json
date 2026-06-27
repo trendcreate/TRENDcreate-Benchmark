@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T07:50:02+00:00",
-  "count": 8,
+  "generated": "2026-06-27T08:17:56+00:00",
+  "count": 7,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -97,22 +97,6 @@
       "gpu_vcalc": 9529.8,
       "runs": 1,
       "last": "2026-06-27T07:25:12+00:00"
-    },
-    {
-      "combo": "Intel_R_Core_TM_Ultra_5_245K__N_A",
-      "cpu": "Intel(R) Core(TM) Ultra 5 245K",
-      "gpu": null,
-      "arch": "AMD64",
-      "cores": "14",
-      "threads": 14,
-      "cpu_mhz": null,
-      "l3": "48 MB",
-      "vram_mb": null,
-      "single": 10706.5,
-      "multi": 105917.6,
-      "gpu_vcalc": null,
-      "runs": 1,
-      "last": "2026-06-27T06:53:39+00:00"
     },
     {
       "combo": "Intel_R_Xeon_R_Gold_6230_CPU_2.10GHz__N_A",
