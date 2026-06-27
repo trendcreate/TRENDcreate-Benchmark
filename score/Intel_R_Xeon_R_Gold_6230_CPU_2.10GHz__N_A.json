@@ -1,0 +1,30 @@
+{
+  "combo": "Intel_R_Xeon_R_Gold_6230_CPU_2.10GHz__N_A",
+  "system": {
+    "cpu_model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",
+    "architecture": "x86_64",
+    "cores_per_socket": "20",
+    "logical_processors": 40,
+    "l3_cache": "27.5 MiB (1 instance)",
+    "gpu_name": null,
+    "gpu_vram_mb": null,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 4259.3,
+    "cpu_multi": 75743.8,
+    "multi_ratio": 0.44
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-27T06:49:21+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 4259.3,
+        "cpu_multi": 75743.8,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.44
+      }
+    }
+  ]
+}
