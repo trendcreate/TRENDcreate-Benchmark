@@ -62,6 +62,7 @@ def normalize(d):
         "architecture": (str(si.get("architecture"))[:60] if si.get("architecture") else None),
         "cores_per_socket": (str(si.get("cores_per_socket"))[:20] if si.get("cores_per_socket") is not None else None),
         "logical_processors": si.get("logical_processors") if isinstance(si.get("logical_processors"), int) else None,
+        "cpu_mhz": num_or_none(si.get("cpu_mhz")),
         "l3_cache": (str(si.get("l3_cache"))[:40] if si.get("l3_cache") else None),
         "gpu_name": (str(si.get("gpu_name"))[:120] if si.get("gpu_name") else None),
         "gpu_vram_mb": num_or_none(si.get("gpu_vram_mb")),

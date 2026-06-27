@@ -273,6 +273,7 @@ const SORTS = {
     {key:"single", label:"Single"},
     {key:"coresN", label:"Cores"},
     {key:"threads",label:"Threads"},
+    {key:"cpu_mhz",label:"Clock"},
   ],
   gpu: [
     {key:"gpu_vcalc", label:"V-Calc"},
@@ -317,7 +318,7 @@ function render(){
   const thead = document.querySelector("#thead");
   if(tab==="cpu"){
     thead.innerHTML = `<th>#</th><th class="l">CPU</th><th class="l">GPU</th>
-      <th>Cores</th><th>Threads</th><th class="l">Performance</th>
+      <th>Cores</th><th>Threads</th><th>Clock</th><th class="l">Performance</th>
       <th>Single</th><th>Multi</th><th>Runs</th>`;
   } else {
     thead.innerHTML = `<th>#</th><th class="l">GPU</th><th class="l">CPU</th>
@@ -339,6 +340,7 @@ function render(){
         <td class="l">${gpu}</td>
         <td class="${lead('coresN')}">${r.cores?esc(String(r.cores).trim()):'–'}</td>
         <td class="${lead('threads')}">${fmt(r.threads)}</td>
+        <td class="${lead('cpu_mhz')}">${r.cpu_mhz?fmt(r.cpu_mhz)+' MHz':'–'}</td>
         ${bar(r)}
         <td class="${lead('single')}">${fmt(r.single)}</td>
         <td class="${lead('multi')}">${fmt(r.multi)}</td>
@@ -367,7 +369,7 @@ function parseMine(text){
   return {
     cpu: si.cpu_model||"Unknown", gpu: si.gpu_name||null,
     cores: si.cores_per_socket ?? null, threads: si.logical_processors ?? null,
-    vram_mb: si.gpu_vram_mb ?? null,
+    cpu_mhz: si.cpu_mhz ?? null, vram_mb: si.gpu_vram_mb ?? null,
     single: best.cpu_single ?? null, multi: best.cpu_multi ?? null,
     gpu_vcalc: best.gpu_vcalc ?? null, runs: runs.length||1,
   };
@@ -389,7 +391,7 @@ buildSortBar();
 
 // ===== 散布図 =====
 const AXES = {single:"CPU Single", multi:"CPU Multi", coresN:"Cores",
-              threads:"Threads", gpu_vcalc:"GPU V-Calc", vram_mb:"VRAM (MB)"};
+              threads:"Threads", cpu_mhz:"CPU Clock (MHz)", gpu_vcalc:"GPU V-Calc", vram_mb:"VRAM (MB)"};
 let axX="single", axY="multi";
 
 function vColor(r){

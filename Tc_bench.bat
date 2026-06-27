@@ -39,6 +39,7 @@ set "INFTMP=%TEMP%\tc_sysinfo_%RANDOM%.txt"
 >> "%PS1TMP%" echo "CPU=" + $c.Name
 >> "%PS1TMP%" echo "CORES=" + $c.NumberOfCores
 >> "%PS1TMP%" echo "THREADS=" + $c.NumberOfLogicalProcessors
+>> "%PS1TMP%" echo "MHZ=" + [int]$c.MaxClockSpeed
 >> "%PS1TMP%" echo $l3 = (Get-CimInstance Win32_CacheMemory ^| Where-Object { $_.Level -eq 5 } ^| Measure-Object MaxCacheSize -Sum).Sum
 >> "%PS1TMP%" echo if ($l3) { "L3=" + [int]($l3/1024) } else { "L3=0" }
 >> "%PS1TMP%" echo $g = $null
@@ -69,6 +70,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1TMP%" > "%INFTMP%" 2>nu
 set "CPU_MODEL="
 set "CORES="
 set "THREADS="
+set "CPU_MHZ=0"
 set "L3MB=0"
 set "GPU_NAME="
 set "GPU_VRAM=0"
@@ -78,6 +80,7 @@ for /f "usebackq tokens=1,* delims==" %%a in ("%INFTMP%") do (
     if "%%a"=="CPU"    set "CPU_MODEL=%%b"
     if "%%a"=="CORES"  set "CORES=%%b"
     if "%%a"=="THREADS" set "THREADS=%%b"
+    if "%%a"=="MHZ"    set "CPU_MHZ=%%b"
     if "%%a"=="L3"     set "L3MB=%%b"
     if "%%a"=="GPU"    set "GPU_NAME=%%b"
     if "%%a"=="VRAM"   set "GPU_VRAM=%%b"
@@ -102,6 +105,7 @@ if "%GPU_VENDOR%"=="" set "GPU_VENDOR=GPU"
 
 echo   CPUモデル名        : %CPU_MODEL%
 echo   コア数 / スレッド数 : %CORES% cores / %THREADS% threads
+if not "%CPU_MHZ%"=="0" echo   動作クロック(最大) : %CPU_MHZ% MHz
 echo   L3キャッシュ容量   : %L3DISP%
 if "%HAS_GPU%"=="0" goto :gpu_none
 echo   GPUモデル名        : %GPU_NAME% [%GPU_VENDOR%]
@@ -140,6 +144,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo CORES      = sys.argv[9] if len(sys.argv) ^> 9 else ""
 >> "%PYTMP%" echo L3_CACHE   = sys.argv[10] if len(sys.argv) ^> 10 else ""
 >> "%PYTMP%" echo GPU_VENDOR = sys.argv[11] if len(sys.argv) ^> 11 else ""
+>> "%PYTMP%" echo CPU_MHZ    = int(sys.argv[12]) if len(sys.argv) ^> 12 and sys.argv[12].isdigit() else 0
 >> "%PYTMP%" echo WORK_LIMIT = 600000
 >> "%PYTMP%" echo def heavy_work(limit):
 >> "%PYTMP%" echo     count = 0; acc = 0.0; n = 2
@@ -200,7 +205,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo         return s.strip("_") or "unknown"
 >> "%PYTMP%" echo     combo = f"{slug(CPU_MODEL)}__{slug(GPU_NAME)}"
 >> "%PYTMP%" echo     path  = os.path.join(SCORE_DIR, combo + ".json")
->> "%PYTMP%" echo     record = {"schema":"tc_bench/score/v1","timestamp":datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),"os":platform.platform(),"system":{"cpu_model":CPU_MODEL,"architecture":ARCH,"cores_per_socket":CORES,"logical_processors":NPROC,"l3_cache":L3_CACHE,"gpu_name":GPU_NAME if HAS_GPU else None,"gpu_vendor":GPU_VENDOR if HAS_GPU else None,"gpu_vram_mb":GPU_VRAM if HAS_GPU else None,"gpu_sm_clock_mhz":(GPU_SMCLK if (HAS_GPU and GPU_SMCLK^>0) else None)},"scores":{"cpu_single":round(single_score,1),"cpu_multi":round(multi_score,1),"gpu_vcalc":round(gpu_score,1) if gpu_score^>0 else None,"multi_ratio":round(ratio,2),"single_time_s":round(single_time,3),"multi_time_s":round(multi_time,3)}}
+>> "%PYTMP%" echo     record = {"schema":"tc_bench/score/v1","timestamp":datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),"os":platform.platform(),"system":{"cpu_model":CPU_MODEL,"architecture":ARCH,"cores_per_socket":CORES,"logical_processors":NPROC,"cpu_mhz":(CPU_MHZ if CPU_MHZ^>0 else None),"l3_cache":L3_CACHE,"gpu_name":GPU_NAME if HAS_GPU else None,"gpu_vendor":GPU_VENDOR if HAS_GPU else None,"gpu_vram_mb":GPU_VRAM if HAS_GPU else None,"gpu_sm_clock_mhz":(GPU_SMCLK if (HAS_GPU and GPU_SMCLK^>0) else None)},"scores":{"cpu_single":round(single_score,1),"cpu_multi":round(multi_score,1),"gpu_vcalc":round(gpu_score,1) if gpu_score^>0 else None,"multi_ratio":round(ratio,2),"single_time_s":round(single_time,3),"multi_time_s":round(multi_time,3)}}
 >> "%PYTMP%" echo     data = {"combo":combo,"system":record["system"],"best":{},"runs":[]}
 >> "%PYTMP%" echo     if os.path.exists(path):
 >> "%PYTMP%" echo         try:
@@ -238,7 +243,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
-%PY% "%PYTMP%" %THREADS% %HAS_GPU% %GPU_VRAM% %GPU_SMCLK% "%CPU_MODEL%" "%GPU_NAME%" "%SCORE_DIR%" "%PROCESSOR_ARCHITECTURE%" "%CORES%" "%L3DISP%" "%GPU_VENDOR%"
+%PY% "%PYTMP%" %THREADS% %HAS_GPU% %GPU_VRAM% %GPU_SMCLK% "%CPU_MODEL%" "%GPU_NAME%" "%SCORE_DIR%" "%PROCESSOR_ARCHITECTURE%" "%CORES%" "%L3DISP%" "%GPU_VENDOR%" "%CPU_MHZ%"
 
 del "%PYTMP%" >nul 2>nul
 

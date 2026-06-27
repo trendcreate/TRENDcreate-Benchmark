@@ -32,6 +32,7 @@ for path in sorted(glob.glob(os.path.join(SCORE_DIR, "*.json"))):
         "arch": si.get("architecture"),
         "cores": si.get("cores_per_socket"),
         "threads": si.get("logical_processors"),
+        "cpu_mhz": si.get("cpu_mhz"),
         "l3": si.get("l3_cache"),
         "vram_mb": si.get("gpu_vram_mb"),
         "single": best.get("cpu_single"),
