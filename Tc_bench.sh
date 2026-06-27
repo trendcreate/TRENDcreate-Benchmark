@@ -104,6 +104,39 @@ if [ "$HAS_GPU" = "0" ] && command -v lspci >/dev/null 2>&1; then
     fi
 fi
 
+# --- AMD: VRAM/クロックの後追い補完 (どの検出経路でも実行) ---
+# 名前だけ取れて VRAM=0 になるケース(rocm-smi等)を amdgpu の sysfs で救済する。
+if [ "$HAS_GPU" = "1" ] && { [ "${GPU_VRAM_MB:-0}" = "0" ] || [ "${GPU_SMCLK_MHZ:-0}" = "0" ]; }; then
+    for _dev in /sys/class/drm/card[0-9]*/device; do
+        [ -e "$_dev/vendor" ] || continue
+        [ "$(cat "$_dev/vendor" 2>/dev/null)" = "0x1002" ] || continue
+        if [ "${GPU_VRAM_MB:-0}" = "0" ] && [ -r "$_dev/mem_info_vram_total" ]; then
+            _b="$(cat "$_dev/mem_info_vram_total" 2>/dev/null)"
+            if [ -n "$_b" ] && [ "$_b" -gt 0 ] 2>/dev/null; then
+                GPU_VRAM_MB="$(( _b / 1048576 ))"
+            fi
+        fi
+        if [ "${GPU_SMCLK_MHZ:-0}" = "0" ] && [ -r "$_dev/pp_dpm_sclk" ]; then
+            _c="$(grep -oiE '[0-9]+[[:space:]]*mhz' "$_dev/pp_dpm_sclk" 2>/dev/null | grep -oE '[0-9]+' | sort -n | tail -n1)"
+            [ -n "$_c" ] && GPU_SMCLK_MHZ="$_c"
+        fi
+        [ "${GPU_VRAM_MB:-0}" != "0" ] && break
+    done
+fi
+
+# --- 最後の砦: lspci の prefetchable BAR サイズから VRAM を推定 ---
+if [ "$HAS_GPU" = "1" ] && [ "${GPU_VRAM_MB:-0}" = "0" ] && command -v lspci >/dev/null 2>&1; then
+    _bar="$(lspci -v 2>/dev/null | awk '/VGA|3D|Display/{f=1} f&&/prefetchable/{print; } /^$/{f=0}' \
+            | grep -oiE 'size=[0-9]+[MG]' | head -n1)"
+    if [ -n "$_bar" ]; then
+        _val="$(echo "$_bar" | grep -oE '[0-9]+')"
+        case "$_bar" in
+            *G|*g) GPU_VRAM_MB="$(( _val * 1024 ))" ;;
+            *M|*m) GPU_VRAM_MB="$_val" ;;
+        esac
+    fi
+fi
+
 # ============================================================================
 #  ヘッダ & システム情報表示
 # ============================================================================
