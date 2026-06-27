@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T07:25:12+00:00",
-  "count": 8,
+  "generated": "2026-06-27T07:41:41+00:00",
+  "count": 9,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -16,6 +16,21 @@
       "gpu_vcalc": null,
       "runs": 2,
       "last": "2026-06-27T15:11:21+09:00"
+    },
+    {
+      "combo": "AMD_Ryzen_7_5700X3D_8-Core_Processor__AMD_Radeon_RX_6750_XT",
+      "cpu": "AMD Ryzen 7 5700X3D 8-Core Processor           ",
+      "gpu": "AMD Radeon RX 6750 XT",
+      "arch": "AMD64",
+      "cores": "8",
+      "threads": 16,
+      "l3": "96 MB",
+      "vram_mb": 12272.0,
+      "single": 5009.5,
+      "multi": 42129.7,
+      "gpu_vcalc": 6223.2,
+      "runs": 1,
+      "last": "2026-06-27T07:41:41+00:00"
     },
     {
       "combo": "AMD_Ryzen_7_5700X3D_8-Core_Processor__N_A",

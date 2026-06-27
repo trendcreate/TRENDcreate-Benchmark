@@ -1,0 +1,31 @@
+{
+  "combo": "AMD_Ryzen_7_5700X3D_8-Core_Processor__AMD_Radeon_RX_6750_XT",
+  "system": {
+    "cpu_model": "AMD Ryzen 7 5700X3D 8-Core Processor           ",
+    "architecture": "AMD64",
+    "cores_per_socket": "8",
+    "logical_processors": 16,
+    "l3_cache": "96 MB",
+    "gpu_name": "AMD Radeon RX 6750 XT",
+    "gpu_vram_mb": 12272.0,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 5009.5,
+    "cpu_multi": 42129.7,
+    "gpu_vcalc": 6223.2,
+    "multi_ratio": 0.53
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-27T07:41:41+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 5009.5,
+        "cpu_multi": 42129.7,
+        "gpu_vcalc": 6223.2,
+        "multi_ratio": 0.53
+      }
+    }
+  ]
+}
