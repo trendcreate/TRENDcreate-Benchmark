@@ -1,0 +1,30 @@
+{
+  "combo": "AMD_Ryzen_7_5800X3D_8-Core_Processor__AMD_Radeon_RX_9070_XT",
+  "system": {
+    "cpu_model": "AMD Ryzen 7 5800X3D 8-Core Processor",
+    "architecture": "x86_64",
+    "cores_per_socket": "8",
+    "logical_processors": 16,
+    "l3_cache": "96 MiB (1 インスタンス)",
+    "gpu_name": "AMD Radeon RX 9070 XT",
+    "gpu_vram_mb": 0.0,
+    "gpu_sm_clock_mhz": null
+  },
+  "best": {
+    "cpu_single": 8113.6,
+    "cpu_multi": 69424.3,
+    "multi_ratio": 0.53
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-27T07:17:46+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 8113.6,
+        "cpu_multi": 69424.3,
+        "gpu_vcalc": null,
+        "multi_ratio": 0.53
+      }
+    }
+  ]
+}

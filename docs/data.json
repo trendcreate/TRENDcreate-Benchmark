@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T06:53:39+00:00",
-  "count": 6,
+  "generated": "2026-06-27T07:17:46+00:00",
+  "count": 7,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -31,6 +31,21 @@
       "gpu_vcalc": null,
       "runs": 1,
       "last": "2026-06-27T06:53:19+00:00"
+    },
+    {
+      "combo": "AMD_Ryzen_7_5800X3D_8-Core_Processor__AMD_Radeon_RX_9070_XT",
+      "cpu": "AMD Ryzen 7 5800X3D 8-Core Processor",
+      "gpu": "AMD Radeon RX 9070 XT",
+      "arch": "x86_64",
+      "cores": "8",
+      "threads": 16,
+      "l3": "96 MiB (1 インスタンス)",
+      "vram_mb": 0.0,
+      "single": 8113.6,
+      "multi": 69424.3,
+      "gpu_vcalc": null,
+      "runs": 1,
+      "last": "2026-06-27T07:17:46+00:00"
     },
     {
       "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
