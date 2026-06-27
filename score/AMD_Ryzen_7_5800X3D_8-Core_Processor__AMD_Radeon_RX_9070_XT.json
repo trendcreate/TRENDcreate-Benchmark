@@ -7,13 +7,14 @@
     "logical_processors": 16,
     "l3_cache": "96 MiB (1 インスタンス)",
     "gpu_name": "AMD Radeon RX 9070 XT",
-    "gpu_vram_mb": 0.0,
-    "gpu_sm_clock_mhz": null
+    "gpu_vram_mb": 16304.0,
+    "gpu_sm_clock_mhz": 2400.0
   },
   "best": {
-    "cpu_single": 8113.6,
+    "cpu_single": 8281.5,
     "cpu_multi": 69424.3,
-    "multi_ratio": 0.53
+    "multi_ratio": 0.53,
+    "gpu_vcalc": 15247.6
   },
   "runs": [
     {
@@ -24,6 +25,16 @@
         "cpu_multi": 69424.3,
         "gpu_vcalc": null,
         "multi_ratio": 0.53
+      }
+    },
+    {
+      "timestamp": "2026-06-27T07:24:27+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 8281.5,
+        "cpu_multi": 67469.8,
+        "gpu_vcalc": 15247.6,
+        "multi_ratio": 0.51
       }
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-27T07:17:46+00:00",
+  "generated": "2026-06-27T07:24:27+00:00",
   "count": 7,
   "entries": [
     {
@@ -40,12 +40,12 @@
       "cores": "8",
       "threads": 16,
       "l3": "96 MiB (1 インスタンス)",
-      "vram_mb": 0.0,
-      "single": 8113.6,
+      "vram_mb": 16304.0,
+      "single": 8281.5,
       "multi": 69424.3,
-      "gpu_vcalc": null,
-      "runs": 1,
-      "last": "2026-06-27T07:17:46+00:00"
+      "gpu_vcalc": 15247.6,
+      "runs": 2,
+      "last": "2026-06-27T07:24:27+00:00"
     },
     {
       "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
