@@ -3,7 +3,7 @@ name: Ingest score from issue
 # Issue 経由で共有されたスコアを自動で取り込み、サイト(data.json)を更新する
 on:
   issues:
-    types: [opened, edited, labeled]
+    types: [opened, edited]
 
 permissions:
   contents: write
@@ -47,7 +47,10 @@ jobs:
             echo "no changes to commit"
           else
             git commit -m "scores: ingest #${{ github.event.issue.number }} (${{ steps.ingest.outputs.combo }}) [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "retry push ($i)"; sleep 3
+            done
           fi
 
       - name: Comment success and close

@@ -38,5 +38,8 @@ jobs:
             echo "data.json already up to date"
           else
             git commit -m "docs: rebuild data.json [skip ci]"
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "retry push ($i)"; sleep 3
+            done
           fi
