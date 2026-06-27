@@ -28,7 +28,16 @@ Lubuntu / antiX などの軽量Linux と Windows の両方で動く、**CPU / GP
 
 ### ベンチマーク実行
 
-**Linux**
+**Linux（ワンライナー / クローン不要）**
+```bash
+curl -fsSL https://raw.githubusercontent.com/trendcreate/TRENDcreate-Benchmark/main/Tc_bench.sh | bash
+```
+スコアはカレントディレクトリの `./score/` に保存されます。保存場所を固定したい場合は次の方法を推奨：
+```bash
+curl -fsSL https://raw.githubusercontent.com/trendcreate/TRENDcreate-Benchmark/main/Tc_bench.sh -o Tc_bench.sh && bash Tc_bench.sh
+```
+
+**Linux（クローン済みの場合）**
 ```bash
 chmod +x Tc_bench.sh    # 初回のみ（スクリプト末尾で自動付与も行います）
 ./Tc_bench.sh

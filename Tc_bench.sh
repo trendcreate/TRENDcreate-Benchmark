@@ -162,7 +162,16 @@ echo ""
 "$PY" - "$NPROC" "$HAS_GPU" "$GPU_VRAM_MB" "$GPU_SMCLK_MHZ" "$CPU_MODEL" "$GPU_NAME" "$SCORE_DIR" "$ARCH" "${CORES:-N/A}" "$L3_CACHE" "$GPU_VENDOR" <<'PYEOF'
 import sys, time, math, os, json, re, platform
 from datetime import datetime, timezone
+import multiprocessing as _mp
 from multiprocessing import Pool, cpu_count
+
+# Python 3.14 以降 Linux の既定が forkserver になり、stdin(ヒアドキュメント)実行だと
+# __main__ を再import できず失敗する。fork に固定して回避する。
+try:
+    if "fork" in _mp.get_all_start_methods():
+        _mp.set_start_method("fork", force=True)
+except Exception:
+    pass
 
 C_RESET="\033[0m"; C_BOLD="\033[1m"; C_GREEN="\033[32m"
 C_YELLOW="\033[33m"; C_CYAN="\033[36m"; C_MAGENTA="\033[35m"; C_RED="\033[31m"
