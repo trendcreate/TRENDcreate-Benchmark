@@ -63,9 +63,21 @@
     background:linear-gradient(120deg,var(--accent),var(--accent2));border-color:transparent;
     color:#fff;box-shadow:0 6px 18px -6px var(--accent);
   }
-  .seg{display:inline-flex;background:rgba(0,0,0,.25);border:1px solid var(--panel-brd);border-radius:12px;padding:4px;gap:4px}
+  .seg{display:inline-flex;background:rgba(0,0,0,.25);border:1px solid var(--panel-brd);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap}
   .seg button{border:none;background:transparent;border-radius:8px;padding:7px 14px}
   .seg button:hover{background:rgba(255,255,255,.06)}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--panel-brd)}
+  .tabs button{
+    border:none;background:transparent;color:var(--dim);border-radius:0;
+    padding:10px 18px;font-size:14px;font-weight:700;border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .tabs button:hover{color:var(--fg);background:transparent}
+  .tabs button.active{color:#fff;border-bottom-color:var(--accent)}
+  input[type=search]{
+    flex:1;min-width:160px;max-width:340px;background:rgba(0,0,0,.3);color:var(--fg);
+    border:1px solid var(--panel-brd);border-radius:10px;padding:8px 14px;font-family:var(--ui);font-size:13px;
+  }
+  input[type=search]:focus{outline:2px solid var(--accent);outline-offset:1px}
   table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
   th,td{padding:12px 10px;text-align:right;white-space:nowrap}
   th{color:var(--faint);text-transform:uppercase;font-size:10.5px;letter-spacing:1.2px;font-weight:700;
@@ -141,30 +153,23 @@
 
   <div class="panel">
     <h2>Scoreboard</h2>
-    <div class="controls" style="justify-content:space-between">
-      <div class="seg">
-        <button data-sort="multi" class="active">Multi</button>
-        <button data-sort="single">Single</button>
-        <button data-sort="gpu_vcalc">GPU&nbsp;V-Calc</button>
-      </div>
-      <span class="pill" id="meta">loading…</span>
+    <div class="tabs">
+      <button data-tab="cpu" class="active">🧠 CPU</button>
+      <button data-tab="gpu">🎮 GPU</button>
+    </div>
+    <div class="controls" style="justify-content:space-between;gap:12px">
+      <div class="seg" id="sortbar"></div>
+      <input type="search" id="filter" placeholder="🔍 CPU / GPU 名で絞り込み…" autocomplete="off">
     </div>
     <div style="overflow:auto">
       <table id="board">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th class="l">CPU</th>
-            <th class="l">GPU</th>
-            <th class="l">Performance</th>
-            <th>Single</th>
-            <th>Multi</th>
-            <th>GPU&nbsp;V-Calc</th>
-            <th>Runs</th>
-          </tr>
-        </thead>
+        <thead><tr id="thead"></tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+    <div class="controls" style="margin-top:10px">
+      <span class="pill" id="meta">loading…</span>
+      <span class="pill" id="shown"></span>
     </div>
   </div>
 
@@ -225,69 +230,132 @@
 <script>
 const REPO = "trendcreate/TRENDcreate-Benchmark";
 let DATA = {entries:[]};
-let sortKey = "multi";
 let mine = null;
+let mineRaw = "";          // 投稿用に元のJSONテキストを保持
+let tab = "cpu";
+let sortKey = "multi";
+let filterText = "";
+
+// タブごとの並び替え候補
+const SORTS = {
+  cpu: [
+    {key:"multi",  label:"Multi"},
+    {key:"single", label:"Single"},
+    {key:"coresN", label:"Cores"},
+    {key:"threads",label:"Threads"},
+  ],
+  gpu: [
+    {key:"gpu_vcalc", label:"V-Calc"},
+    {key:"vram_mb",   label:"VRAM"},
+  ],
+};
 
 const fmt = v => (typeof v === "number") ? v.toLocaleString(undefined,{maximumFractionDigits:0}) : "–";
+const fmtVram = v => (typeof v === "number" && v>0) ? (v/1024).toFixed(1)+" GB" : "–";
 const medal = i => (i===1?"🥇":i===2?"🥈":i===3?"🥉":i);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const numv = (r,k) => k==="coresN" ? (parseInt(r.cores)||0) : r[k];
+
+function buildSortBar(){
+  const bar=document.querySelector("#sortbar"); bar.innerHTML="";
+  SORTS[tab].forEach(s=>{
+    const b=document.createElement("button");
+    b.textContent=s.label; if(s.key===sortKey) b.classList.add("active");
+    b.onclick=()=>{ sortKey=s.key; buildSortBar(); render(); };
+    bar.appendChild(b);
+  });
+}
 
 function render(){
-  const rows = DATA.entries.slice();
+  let rows = DATA.entries.slice();
   if(mine) rows.push(Object.assign({__me:true}, mine));
+  if(tab==="gpu") rows = rows.filter(r => r.gpu && (r.gpu_vcalc!=null || r.vram_mb));
+  const f = filterText.trim().toLowerCase();
+  if(f) rows = rows.filter(r => (r.cpu||"").toLowerCase().includes(f) || (r.gpu||"").toLowerCase().includes(f));
   rows.sort((a,b)=>{
-    const av=a[sortKey], bv=b[sortKey];
+    const av=numv(a,sortKey), bv=numv(b,sortKey);
     const an=(av==null), bn=(bv==null);
     if(an&&bn) return 0; if(an) return 1; if(bn) return -1;
     return bv-av;
   });
-  const max = Math.max(1, ...rows.map(r=>r[sortKey]||0));
-  const tb = document.querySelector("#board tbody");
-  tb.innerHTML = "";
-  const lead = {single:"single",multi:"multi",gpu_vcalc:"gpu_vcalc"}[sortKey];
+  const max = Math.max(1, ...rows.map(r=>numv(r,sortKey)||0));
+  const lead = k => "num" + (k===sortKey ? " lead" : "");
+  const bar = r => { const w=Math.max(2,Math.round(((numv(r,sortKey)||0)/max)*100));
+                     return `<td class="l"><div class="track"><div class="bar" style="width:${w}%"></div></div></td>`; };
+
+  // ヘッダ
+  const thead = document.querySelector("#thead");
+  if(tab==="cpu"){
+    thead.innerHTML = `<th>#</th><th class="l">CPU</th><th class="l">GPU</th>
+      <th>Cores</th><th>Threads</th><th class="l">Performance</th>
+      <th>Single</th><th>Multi</th><th>Runs</th>`;
+  } else {
+    thead.innerHTML = `<th>#</th><th class="l">GPU</th><th class="l">CPU</th>
+      <th>VRAM</th><th class="l">Performance</th><th>GPU&nbsp;V-Calc</th><th>Runs</th>`;
+  }
+
+  const tb = document.querySelector("#board tbody"); tb.innerHTML="";
   rows.forEach((r,idx)=>{
-    const i = idx+1;
-    const tr = document.createElement("tr");
-    tr.className = "r"+i + (r.__me?" me":"");
-    const barW = Math.max(2, Math.round(((r[sortKey]||0)/max)*100));
-    const cpu = esc((r.cpu||"Unknown").trim());
+    const i=idx+1;
+    const tr=document.createElement("tr");
+    tr.className="r"+i+(r.__me?" me":"");
+    const cpu=esc((r.cpu||"Unknown").trim());
     const gpu = r.gpu ? `<span class="gpu">${esc(r.gpu.trim())}</span>` : '<span class="muted">–</span>';
-    const youTag = r.__me ? ' <span class="pill" style="border-color:var(--pink);color:var(--pink)">YOU</span>' : '';
-    const cls = k => "num" + (k===lead ? " lead" : "");
-    tr.innerHTML = `
-      <td class="rank">${medal(i)}</td>
-      <td class="l"><span class="cpu">${cpu}</span>${youTag}</td>
-      <td class="l">${gpu}</td>
-      <td class="l"><div class="track"><div class="bar" style="width:${barW}%"></div></div></td>
-      <td class="${cls('single')}">${fmt(r.single)}</td>
-      <td class="${cls('multi')}">${fmt(r.multi)}</td>
-      <td class="vnum">${fmt(r.gpu_vcalc)}</td>
-      <td class="muted">${r.runs??1}</td>`;
+    const you = r.__me ? ' <span class="pill" style="border-color:var(--pink);color:var(--pink)">YOU</span>' : '';
+    if(tab==="cpu"){
+      tr.innerHTML = `
+        <td class="rank">${medal(i)}</td>
+        <td class="l"><span class="cpu">${cpu}</span>${you}</td>
+        <td class="l">${gpu}</td>
+        <td class="${lead('coresN')}">${r.cores?esc(String(r.cores).trim()):'–'}</td>
+        <td class="${lead('threads')}">${fmt(r.threads)}</td>
+        ${bar(r)}
+        <td class="${lead('single')}">${fmt(r.single)}</td>
+        <td class="${lead('multi')}">${fmt(r.multi)}</td>
+        <td class="muted">${r.runs??1}</td>`;
+    } else {
+      tr.innerHTML = `
+        <td class="rank">${medal(i)}</td>
+        <td class="l">${gpu}${you}</td>
+        <td class="l"><span class="cpu">${cpu}</span></td>
+        <td class="${lead('vram_mb')}">${fmtVram(r.vram_mb)}</td>
+        ${bar(r)}
+        <td class="vnum">${fmt(r.gpu_vcalc)}</td>
+        <td class="muted">${r.runs??1}</td>`;
+    }
     tb.appendChild(tr);
   });
+
   document.querySelector("#meta").textContent =
-    `${DATA.count??DATA.entries.length} 件` + (DATA.generated?` · 更新 ${DATA.generated.slice(0,10)}`:"");
+    `全 ${DATA.count??DATA.entries.length} 件` + (DATA.generated?` · 更新 ${DATA.generated.slice(0,10)}`:"");
+  document.querySelector("#shown").textContent = `表示 ${rows.length} 件`;
 }
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 
 function parseMine(text){
   const d = JSON.parse(text);
   const si = d.system||{}, best = d.best||{}, runs = d.runs||[];
   return {
     cpu: si.cpu_model||"Unknown", gpu: si.gpu_name||null,
+    cores: si.cores_per_socket ?? null, threads: si.logical_processors ?? null,
+    vram_mb: si.gpu_vram_mb ?? null,
     single: best.cpu_single ?? null, multi: best.cpu_multi ?? null,
     gpu_vcalc: best.gpu_vcalc ?? null, runs: runs.length||1,
   };
 }
 
-let mineRaw = "";  // 投稿用に元のJSONテキストを保持
-
-document.querySelectorAll("[data-sort]").forEach(b=>{
+// タブ切替
+document.querySelectorAll("[data-tab]").forEach(b=>{
   b.onclick=()=>{
-    sortKey=b.dataset.sort;
-    document.querySelectorAll("[data-sort]").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); render();
+    tab=b.dataset.tab;
+    document.querySelectorAll("[data-tab]").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    sortKey=SORTS[tab][0].key;
+    buildSortBar(); render();
   };
 });
+// 検索フィルタ
+document.querySelector("#filter").addEventListener("input", e=>{ filterText=e.target.value; render(); });
+buildSortBar();
 
 const drop = document.querySelector("#drop");
 const fileInput = document.querySelector("#file");
