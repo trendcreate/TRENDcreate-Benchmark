@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T07:24:27+00:00",
-  "count": 7,
+  "generated": "2026-06-27T07:25:12+00:00",
+  "count": 8,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -76,6 +76,21 @@
       "gpu_vcalc": null,
       "runs": 1,
       "last": "2026-06-27T15:00:25+09:00"
+    },
+    {
+      "combo": "Intel_R_Core_TM_Ultra_5_245K__AMD_Radeon_RX_9060_XT",
+      "cpu": "Intel(R) Core(TM) Ultra 5 245K",
+      "gpu": "AMD Radeon RX 9060 XT",
+      "arch": "AMD64",
+      "cores": "14",
+      "threads": 14,
+      "l3": "48 MB",
+      "vram_mb": 16304.0,
+      "single": 10554.6,
+      "multi": 106276.9,
+      "gpu_vcalc": 9529.8,
+      "runs": 1,
+      "last": "2026-06-27T07:25:12+00:00"
     },
     {
       "combo": "Intel_R_Core_TM_Ultra_5_245K__N_A",
