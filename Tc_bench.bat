@@ -50,7 +50,19 @@ set "INFTMP=%TEMP%\tc_sysinfo_%RANDOM%.txt"
 >> "%PS1TMP%" echo   "GPU=" + $p[0].Trim()
 >> "%PS1TMP%" echo   "VRAM=" + ($p[1] -replace '[^\d]','')
 >> "%PS1TMP%" echo   "SMCLK=" + ($p[2] -replace '[^\d]','')
->> "%PS1TMP%" echo } else { "GPU="; "VRAM=0"; "SMCLK=0" }
+>> "%PS1TMP%" echo   "VENDOR=NVIDIA"
+>> "%PS1TMP%" echo } else {
+>> "%PS1TMP%" echo   $vc = Get-CimInstance Win32_VideoController ^| Where-Object { $_.Name -match 'NVIDIA^|AMD^|Radeon^|ATI' } ^| Select-Object -First 1
+>> "%PS1TMP%" echo   if ($vc) {
+>> "%PS1TMP%" echo     $vram = 0
+>> "%PS1TMP%" echo     try { $vram = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\*' -Name 'HardwareInformation.qwMemorySize' -ErrorAction SilentlyContinue ^| ForEach-Object { $_.'HardwareInformation.qwMemorySize' } ^| Sort-Object -Descending ^| Select-Object -First 1) } catch {}
+>> "%PS1TMP%" echo     if (-not $vram -or $vram -eq 0) { $vram = $vc.AdapterRAM }
+>> "%PS1TMP%" echo     "GPU=" + $vc.Name
+>> "%PS1TMP%" echo     "VRAM=" + [int]($vram/1MB)
+>> "%PS1TMP%" echo     "SMCLK=0"
+>> "%PS1TMP%" echo     if ($vc.Name -match 'AMD^|Radeon^|ATI') { "VENDOR=AMD" } else { "VENDOR=NVIDIA" }
+>> "%PS1TMP%" echo   } else { "GPU="; "VRAM=0"; "SMCLK=0"; "VENDOR=" }
+>> "%PS1TMP%" echo }
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1TMP%" > "%INFTMP%" 2>nul
 
@@ -61,6 +73,7 @@ set "L3MB=0"
 set "GPU_NAME="
 set "GPU_VRAM=0"
 set "GPU_SMCLK=0"
+set "GPU_VENDOR="
 for /f "usebackq tokens=1,* delims==" %%a in ("%INFTMP%") do (
     if "%%a"=="CPU"    set "CPU_MODEL=%%b"
     if "%%a"=="CORES"  set "CORES=%%b"
@@ -69,6 +82,7 @@ for /f "usebackq tokens=1,* delims==" %%a in ("%INFTMP%") do (
     if "%%a"=="GPU"    set "GPU_NAME=%%b"
     if "%%a"=="VRAM"   set "GPU_VRAM=%%b"
     if "%%a"=="SMCLK"  set "GPU_SMCLK=%%b"
+    if "%%a"=="VENDOR" set "GPU_VENDOR=%%b"
 )
 del "%PS1TMP%" >nul 2>nul
 del "%INFTMP%" >nul 2>nul
@@ -79,21 +93,24 @@ if not defined THREADS set "THREADS=%NUMBER_OF_PROCESSORS%"
 if "%L3MB%"=="" set "L3MB=0"
 if "%L3MB%"=="0" ( set "L3DISP=N/A" ) else ( set "L3DISP=%L3MB% MB" )
 
-set "HAS_NVIDIA=0"
-if defined GPU_NAME if not "%GPU_NAME%"=="" set "HAS_NVIDIA=1"
-if "%HAS_NVIDIA%"=="0" set "GPU_NAME=N/A"
+set "HAS_GPU=0"
+if defined GPU_NAME if not "%GPU_NAME%"=="" set "HAS_GPU=1"
+if "%HAS_GPU%"=="0" set "GPU_NAME=N/A"
 if "%GPU_VRAM%"=="" set "GPU_VRAM=0"
 if "%GPU_SMCLK%"=="" set "GPU_SMCLK=0"
+if "%GPU_VENDOR%"=="" set "GPU_VENDOR=GPU"
 
 echo   CPUモデル名        : %CPU_MODEL%
 echo   コア数 / スレッド数 : %CORES% cores / %THREADS% threads
 echo   L3キャッシュ容量   : %L3DISP%
-if "%HAS_NVIDIA%"=="1" (
-    echo   GPUモデル名        : %GPU_NAME%
-    echo   VRAM総容量         : %GPU_VRAM% MB ^(最大SM %GPU_SMCLK% MHz^)
-) else (
-    echo   GPU ^(NVIDIA^)       : 未検出 — GPUスコアはスキップ ^(OOM回避モード^)
-)
+if "%HAS_GPU%"=="0" goto :gpu_none
+echo   GPUモデル名        : %GPU_NAME% [%GPU_VENDOR%]
+if "%GPU_SMCLK%"=="0" echo   VRAM総容量         : %GPU_VRAM% MB [クロック不明 - 公称値で算出]
+if not "%GPU_SMCLK%"=="0" echo   VRAM総容量         : %GPU_VRAM% MB [最大クロック %GPU_SMCLK% MHz]
+goto :gpu_done
+:gpu_none
+echo   GPU                : NVIDIA/AMD 未検出 - GPUスコアはスキップ [OOM回避モード]
+:gpu_done
 echo.
 
 REM ---- List saved scores -----------------------------------
@@ -113,7 +130,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo from datetime import datetime, timezone
 >> "%PYTMP%" echo from multiprocessing import Pool, cpu_count
 >> "%PYTMP%" echo NPROC      = int(sys.argv[1]) if len(sys.argv) ^> 1 else cpu_count()
->> "%PYTMP%" echo HAS_NVIDIA = sys.argv[2] == "1" if len(sys.argv) ^> 2 else False
+>> "%PYTMP%" echo HAS_GPU    = sys.argv[2] == "1" if len(sys.argv) ^> 2 else False
 >> "%PYTMP%" echo GPU_VRAM   = float(sys.argv[3]) if len(sys.argv) ^> 3 else 0.0
 >> "%PYTMP%" echo GPU_SMCLK  = float(sys.argv[4]) if len(sys.argv) ^> 4 else 0.0
 >> "%PYTMP%" echo CPU_MODEL  = sys.argv[5] if len(sys.argv) ^> 5 else "Unknown"
@@ -122,6 +139,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo ARCH       = sys.argv[8] if len(sys.argv) ^> 8 else ""
 >> "%PYTMP%" echo CORES      = sys.argv[9] if len(sys.argv) ^> 9 else ""
 >> "%PYTMP%" echo L3_CACHE   = sys.argv[10] if len(sys.argv) ^> 10 else ""
+>> "%PYTMP%" echo GPU_VENDOR = sys.argv[11] if len(sys.argv) ^> 11 else ""
 >> "%PYTMP%" echo WORK_LIMIT = 600000
 >> "%PYTMP%" echo def heavy_work(limit):
 >> "%PYTMP%" echo     count = 0; acc = 0.0; n = 2
@@ -156,10 +174,12 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo     single_score = SCORE_FACTOR / single_time
 >> "%PYTMP%" echo     multi_score  = (SCORE_FACTOR * NPROC) / multi_time
 >> "%PYTMP%" echo     ratio        = single_time / multi_time if multi_time ^> 0 else 0.0
->> "%PYTMP%" echo     gpu_score = 0.0
->> "%PYTMP%" echo     if HAS_NVIDIA and GPU_VRAM ^> 0:
+>> "%PYTMP%" echo     gpu_score = 0.0; gpu_estimated = False
+>> "%PYTMP%" echo     if HAS_GPU and GPU_VRAM ^> 0:
 >> "%PYTMP%" echo         vram_gb = GPU_VRAM / 1024.0
->> "%PYTMP%" echo         gpu_score = (GPU_SMCLK * (vram_gb ** 1.5)) / 10.0
+>> "%PYTMP%" echo         clk = GPU_SMCLK if GPU_SMCLK ^> 0 else 1500.0
+>> "%PYTMP%" echo         if GPU_SMCLK ^<= 0: gpu_estimated = True
+>> "%PYTMP%" echo         gpu_score = (clk * (vram_gb ** 1.5)) / 10.0
 >> "%PYTMP%" echo     print("  ==================================================================")
 >> "%PYTMP%" echo     print("                  >> BENCHMARK  RESULT  SCORE <<")
 >> "%PYTMP%" echo     print("  ==================================================================")
@@ -168,9 +188,11 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo     print(f"  CPU Single {bar(single_score, max_score)} {single_score:7.0f} pts (優しさの証)")
 >> "%PYTMP%" echo     print(f"  CPU Multi  {bar(multi_score, max_score)} {multi_score:7.0f} pts (全スレッド全力回転)")
 >> "%PYTMP%" echo     if gpu_score ^> 0:
->> "%PYTMP%" echo         print(f"  GPU V-Calc {bar(gpu_score, max_score)} {gpu_score:7.0f} pts (VRAM暴力の真価)")
+>> "%PYTMP%" echo         _note = "(VRAM暴力の真価)" + (" ※クロック公称値" if gpu_estimated else "")
+>> "%PYTMP%" echo         _vd = f"[{GPU_VENDOR}]" if GPU_VENDOR else ""
+>> "%PYTMP%" echo         print(f"  GPU V-Calc {bar(gpu_score, max_score)} {gpu_score:7.0f} pts {_note} {_vd}")
 >> "%PYTMP%" echo     else:
->> "%PYTMP%" echo         print("  GPU V-Calc [........................................]   SKIPPED (NVIDIA未検出 / OOM回避)")
+>> "%PYTMP%" echo         print("  GPU V-Calc [........................................]   SKIPPED (NVIDIA/AMD未検出 / OOM回避)")
 >> "%PYTMP%" echo     print("  ------------------------------------------------------------------")
 >> "%PYTMP%" echo     print(f"  マルチコア倍率 : {ratio:.2f}x  (Single {single_time:.2f}s / Multi {multi_time:.2f}s)")
 >> "%PYTMP%" echo     def slug(s):
@@ -178,7 +200,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 >> "%PYTMP%" echo         return s.strip("_") or "unknown"
 >> "%PYTMP%" echo     combo = f"{slug(CPU_MODEL)}__{slug(GPU_NAME)}"
 >> "%PYTMP%" echo     path  = os.path.join(SCORE_DIR, combo + ".json")
->> "%PYTMP%" echo     record = {"schema":"tc_bench/score/v1","timestamp":datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),"os":platform.platform(),"system":{"cpu_model":CPU_MODEL,"architecture":ARCH,"cores_per_socket":CORES,"logical_processors":NPROC,"l3_cache":L3_CACHE,"gpu_name":GPU_NAME if HAS_NVIDIA else None,"gpu_vram_mb":GPU_VRAM if HAS_NVIDIA else None,"gpu_sm_clock_mhz":GPU_SMCLK if HAS_NVIDIA else None},"scores":{"cpu_single":round(single_score,1),"cpu_multi":round(multi_score,1),"gpu_vcalc":round(gpu_score,1) if gpu_score^>0 else None,"multi_ratio":round(ratio,2),"single_time_s":round(single_time,3),"multi_time_s":round(multi_time,3)}}
+>> "%PYTMP%" echo     record = {"schema":"tc_bench/score/v1","timestamp":datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),"os":platform.platform(),"system":{"cpu_model":CPU_MODEL,"architecture":ARCH,"cores_per_socket":CORES,"logical_processors":NPROC,"l3_cache":L3_CACHE,"gpu_name":GPU_NAME if HAS_GPU else None,"gpu_vendor":GPU_VENDOR if HAS_GPU else None,"gpu_vram_mb":GPU_VRAM if HAS_GPU else None,"gpu_sm_clock_mhz":(GPU_SMCLK if (HAS_GPU and GPU_SMCLK^>0) else None)},"scores":{"cpu_single":round(single_score,1),"cpu_multi":round(multi_score,1),"gpu_vcalc":round(gpu_score,1) if gpu_score^>0 else None,"multi_ratio":round(ratio,2),"single_time_s":round(single_time,3),"multi_time_s":round(multi_time,3)}}
 >> "%PYTMP%" echo     data = {"combo":combo,"system":record["system"],"best":{},"runs":[]}
 >> "%PYTMP%" echo     if os.path.exists(path):
 >> "%PYTMP%" echo         try:
@@ -216,7 +238,7 @@ set "PYTMP=%TEMP%\tc_bench_%RANDOM%.py"
 
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
-%PY% "%PYTMP%" %THREADS% %HAS_NVIDIA% %GPU_VRAM% %GPU_SMCLK% "%CPU_MODEL%" "%GPU_NAME%" "%SCORE_DIR%" "%PROCESSOR_ARCHITECTURE%" "%CORES%" "%L3DISP%"
+%PY% "%PYTMP%" %THREADS% %HAS_GPU% %GPU_VRAM% %GPU_SMCLK% "%CPU_MODEL%" "%GPU_NAME%" "%SCORE_DIR%" "%PROCESSOR_ARCHITECTURE%" "%CORES%" "%L3DISP%" "%GPU_VENDOR%"
 
 del "%PYTMP%" >nul 2>nul
 

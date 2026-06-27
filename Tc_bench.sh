@@ -36,19 +36,71 @@ L3_CACHE="$(get_lscpu 'L3 cache|L3 キャッシュ')";          [ -z "$L3_CACHE"
 NPROC="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
 
 # ============================================================================
-#  GPU情報 (NVIDIA) の取得
+#  GPU情報の取得 (NVIDIA / AMD 対応)
 # ============================================================================
-GPU_NAME="N/A"; GPU_VRAM_MB="0"; GPU_SMCLK_MHZ="0"; HAS_NVIDIA="0"
+GPU_NAME="N/A"; GPU_VRAM_MB="0"; GPU_SMCLK_MHZ="0"; HAS_GPU="0"; GPU_VENDOR=""
+
+# --- NVIDIA (nvidia-smi) ---
 if command -v nvidia-smi >/dev/null 2>&1; then
     _gpuline="$(nvidia-smi --query-gpu=name,memory.total,clocks.max.sm \
                 --format=csv,noheader,nounits 2>/dev/null | head -n1)"
     if [ -n "$_gpuline" ]; then
-        HAS_NVIDIA="1"
+        HAS_GPU="1"; GPU_VENDOR="NVIDIA"
         GPU_NAME="$(echo "$_gpuline"   | awk -F',' '{gsub(/^[ \t]+|[ \t]+$/,"",$1); print $1}')"
         GPU_VRAM_MB="$(echo "$_gpuline" | awk -F',' '{gsub(/[^0-9]/,"",$2); print $2}')"
         GPU_SMCLK_MHZ="$(echo "$_gpuline" | awk -F',' '{gsub(/[^0-9]/,"",$3); print $3}')"
         [ -z "$GPU_VRAM_MB" ]   && GPU_VRAM_MB="0"
         [ -z "$GPU_SMCLK_MHZ" ] && GPU_SMCLK_MHZ="0"
+    fi
+fi
+
+# --- AMD (rocm-smi があれば優先) ---
+if [ "$HAS_GPU" = "0" ] && command -v rocm-smi >/dev/null 2>&1; then
+    _amdname="$(rocm-smi --showproductname 2>/dev/null | grep -iE 'Card series|Card model|Product Name' | head -n1 | sed -E 's/.*:[[:space:]]*//')"
+    _amdvram="$(rocm-smi --showmeminfo vram 2>/dev/null | grep -iE 'Total' | head -n1 | grep -oE '[0-9]+' | head -n1)"  # bytes
+    _amdclk="$(rocm-smi --showmaxclocks 2>/dev/null | grep -iE 'sclk' | grep -oE '[0-9]+' | head -n1)"
+    if [ -n "$_amdname" ] || [ -n "$_amdvram" ]; then
+        HAS_GPU="1"; GPU_VENDOR="AMD"
+        GPU_NAME="${_amdname:-AMD GPU}"
+        [ -n "$_amdvram" ] && GPU_VRAM_MB="$(( _amdvram / 1048576 ))"
+        [ -n "$_amdclk" ]  && GPU_SMCLK_MHZ="$_amdclk"
+    fi
+fi
+
+# --- AMD (amdgpu の sysfs から取得 / 追加ツール不要) ---
+if [ "$HAS_GPU" = "0" ]; then
+    for _dev in /sys/class/drm/card[0-9]*/device; do
+        [ -e "$_dev/mem_info_vram_total" ] || continue
+        _vendor_id="$(cat "$_dev/vendor" 2>/dev/null)"
+        [ "$_vendor_id" = "0x1002" ] || continue          # 0x1002 = AMD
+        HAS_GPU="1"; GPU_VENDOR="AMD"
+        _bytes="$(cat "$_dev/mem_info_vram_total" 2>/dev/null)"
+        [ -n "$_bytes" ] && GPU_VRAM_MB="$(( _bytes / 1048576 ))"
+        # 最大sclk (pp_dpm_sclk の最終行の MHz)
+        if [ -e "$_dev/pp_dpm_sclk" ]; then
+            GPU_SMCLK_MHZ="$(grep -oE '[0-9]+Mhz' "$_dev/pp_dpm_sclk" | grep -oE '[0-9]+' | sort -n | tail -n1)"
+            [ -z "$GPU_SMCLK_MHZ" ] && GPU_SMCLK_MHZ="0"
+        fi
+        # 名前は lspci から
+        if command -v lspci >/dev/null 2>&1; then
+            GPU_NAME="$(lspci 2>/dev/null | grep -iE 'VGA|3D|Display' | grep -iE 'AMD|ATI|Radeon' | head -n1 | sed -E 's/.*: //')"
+        fi
+        [ -z "$GPU_NAME" ] && GPU_NAME="AMD GPU"
+        break
+    done
+fi
+
+# --- 名前だけでも lspci で AMD を拾う (VRAM不明でも検出) ---
+if [ "$HAS_GPU" = "0" ] && command -v lspci >/dev/null 2>&1; then
+    _line="$(lspci 2>/dev/null | grep -iE 'VGA|3D|Display' | grep -iE 'AMD|ATI|Radeon' | head -n1)"
+    if [ -n "$_line" ]; then
+        HAS_GPU="1"; GPU_VENDOR="AMD"
+        GPU_NAME="$(echo "$_line" | sed -E 's/.*: //')"
+        # glxinfo があれば VRAM を取得
+        if command -v glxinfo >/dev/null 2>&1; then
+            GPU_VRAM_MB="$(glxinfo 2>/dev/null | grep -iE 'Video memory|Dedicated video memory' | grep -oE '[0-9]+' | head -n1)"
+            [ -z "$GPU_VRAM_MB" ] && GPU_VRAM_MB="0"
+        fi
     fi
 fi
 
@@ -68,11 +120,15 @@ printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s${C_RESET}\n" "CPUモデル名" 
 printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s${C_RESET}\n" "アーキテクチャ"   "$ARCH"
 printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s / %s${C_RESET}\n" "コア数 / スレッド数" "${CORES:-N/A} cores" "$NPROC threads"
 printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s${C_RESET}\n" "L3キャッシュ容量" "$L3_CACHE"
-if [ "$HAS_NVIDIA" = "1" ]; then
-    printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s${C_RESET}\n" "GPUモデル名" "$GPU_NAME"
-    printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s MB (最大SM %s MHz)${C_RESET}\n" "VRAM総容量" "$GPU_VRAM_MB" "$GPU_SMCLK_MHZ"
+if [ "$HAS_GPU" = "1" ]; then
+    printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s (%s)${C_RESET}\n" "GPUモデル名" "$GPU_NAME" "$GPU_VENDOR"
+    if [ "$GPU_SMCLK_MHZ" != "0" ]; then
+        printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s MB (最大クロック %s MHz)${C_RESET}\n" "VRAM総容量" "$GPU_VRAM_MB" "$GPU_SMCLK_MHZ"
+    else
+        printf "  ${C_GREEN}%-20s${C_RESET}: ${C_BOLD}%s MB${C_RESET} ${C_YELLOW}(クロック不明→公称値で算出)${C_RESET}\n" "VRAM総容量" "$GPU_VRAM_MB"
+    fi
 else
-    printf "  ${C_GREEN}%-20s${C_RESET}: ${C_YELLOW}%s${C_RESET}\n" "GPU (NVIDIA)" "未検出 — GPUスコアはスキップ (OOM回避モード)"
+    printf "  ${C_GREEN}%-20s${C_RESET}: ${C_YELLOW}%s${C_RESET}\n" "GPU" "NVIDIA/AMD 未検出 — GPUスコアはスキップ (OOM回避モード)"
 fi
 echo ""
 
@@ -101,9 +157,9 @@ echo ""
 
 # ============================================================================
 #  ベンチマーク本体 (インラインPython3 / 標準ライブラリのみ)
-#    引数: NPROC  HAS_NVIDIA  GPU_VRAM_MB  GPU_SMCLK_MHZ
+#    引数: NPROC  HAS_GPU  GPU_VRAM_MB  GPU_SMCLK_MHZ  CPU_MODEL  GPU_NAME  SCORE_DIR  ARCH  CORES  L3  GPU_VENDOR
 # ============================================================================
-"$PY" - "$NPROC" "$HAS_NVIDIA" "$GPU_VRAM_MB" "$GPU_SMCLK_MHZ" "$CPU_MODEL" "$GPU_NAME" "$SCORE_DIR" "$ARCH" "${CORES:-N/A}" "$L3_CACHE" <<'PYEOF'
+"$PY" - "$NPROC" "$HAS_GPU" "$GPU_VRAM_MB" "$GPU_SMCLK_MHZ" "$CPU_MODEL" "$GPU_NAME" "$SCORE_DIR" "$ARCH" "${CORES:-N/A}" "$L3_CACHE" "$GPU_VENDOR" <<'PYEOF'
 import sys, time, math, os, json, re, platform
 from datetime import datetime, timezone
 from multiprocessing import Pool, cpu_count
@@ -112,7 +168,7 @@ C_RESET="\033[0m"; C_BOLD="\033[1m"; C_GREEN="\033[32m"
 C_YELLOW="\033[33m"; C_CYAN="\033[36m"; C_MAGENTA="\033[35m"; C_RED="\033[31m"
 
 NPROC      = int(sys.argv[1]) if len(sys.argv) > 1 else cpu_count()
-HAS_NVIDIA = sys.argv[2] == "1" if len(sys.argv) > 2 else False
+HAS_GPU    = sys.argv[2] == "1" if len(sys.argv) > 2 else False
 GPU_VRAM   = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0   # MB
 GPU_SMCLK  = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0   # MHz
 CPU_MODEL  = sys.argv[5] if len(sys.argv) > 5 else "Unknown"
@@ -121,6 +177,7 @@ SCORE_DIR  = sys.argv[7] if len(sys.argv) > 7 else "score"
 ARCH       = sys.argv[8] if len(sys.argv) > 8 else ""
 CORES      = sys.argv[9] if len(sys.argv) > 9 else ""
 L3_CACHE   = sys.argv[10] if len(sys.argv) > 10 else ""
+GPU_VENDOR = sys.argv[11] if len(sys.argv) > 11 else ""
 
 # --- 計算ワークロード: 素数判定 + 重い浮動小数点演算でCPU100%張り付き ---
 WORK_LIMIT = 600000
@@ -166,12 +223,18 @@ single_score = SCORE_FACTOR / single_time
 multi_score  = (SCORE_FACTOR * NPROC) / multi_time
 ratio        = single_time / multi_time if multi_time > 0 else 0.0
 
-# GPU V-Calcスコア: (最大SMクロック × VRAM容量) ベース。VRAMを圧倒的に優遇。
+# GPU V-Calcスコア: (最大クロック × VRAM容量) ベース。VRAMを圧倒的に優遇。
+# NVIDIA / AMD 両対応。クロック不明(AMD等)の場合は公称値で算出する。
+NOMINAL_CLK = 1500.0
 gpu_score = 0.0
-if HAS_NVIDIA and GPU_VRAM > 0:
+gpu_estimated = False
+if HAS_GPU and GPU_VRAM > 0:
     vram_gb = GPU_VRAM / 1024.0
+    clk = GPU_SMCLK if GPU_SMCLK > 0 else NOMINAL_CLK
+    if GPU_SMCLK <= 0:
+        gpu_estimated = True
     # VRAMの「暴力」: 容量に対して指数的にスコアが伸びるロマン仕様 (vram_gb^1.5)
-    gpu_score = (GPU_SMCLK * (vram_gb ** 1.5)) / 10.0
+    gpu_score = (clk * (vram_gb ** 1.5)) / 10.0
 
 # ===== 結果出力 (レトロサイバーパンク風) ====================================
 print(f"{C_BOLD}{C_MAGENTA}  ╔══════════════════════════════════════════════════════════════════╗{C_RESET}")
@@ -187,11 +250,13 @@ print(f"  {C_YELLOW}CPU Multi {C_RESET} {C_GREEN}{bar(multi_score, max_score)}{C
       f"{C_BOLD}{multi_score:7.0f} pts{C_RESET} {C_CYAN}(全スレッド全力回転){C_RESET}")
 
 if gpu_score > 0:
+    _note = "(VRAM暴力の真価)" + (" ※クロック公称値" if gpu_estimated else "")
+    _vd = f"[{GPU_VENDOR}]" if GPU_VENDOR else ""
     print(f"  {C_YELLOW}GPU V-Calc{C_RESET} {C_MAGENTA}{bar(gpu_score, max_score)}{C_RESET} "
-          f"{C_BOLD}{gpu_score:7.0f} pts{C_RESET} {C_CYAN}(VRAM暴力の真価){C_RESET}")
+          f"{C_BOLD}{gpu_score:7.0f} pts{C_RESET} {C_CYAN}{_note}{C_RESET} {C_MAGENTA}{_vd}{C_RESET}")
 else:
     print(f"  {C_YELLOW}GPU V-Calc{C_RESET} {C_RED}[..........................................]   SKIPPED{C_RESET} "
-          f"{C_CYAN}(NVIDIA未検出 / OOM回避){C_RESET}")
+          f"{C_CYAN}(NVIDIA/AMD未検出 / OOM回避){C_RESET}")
 
 print(f"{C_BOLD}{C_MAGENTA}  ────────────────────────────────────────────────────────────────────{C_RESET}")
 print(f"  {C_YELLOW}マルチコア倍率{C_RESET} : {C_BOLD}{ratio:.2f}x{C_RESET}  "
@@ -213,9 +278,10 @@ record = {
         "cpu_model": CPU_MODEL, "architecture": ARCH,
         "cores_per_socket": CORES, "logical_processors": NPROC,
         "l3_cache": L3_CACHE,
-        "gpu_name": GPU_NAME if HAS_NVIDIA else None,
-        "gpu_vram_mb": GPU_VRAM if HAS_NVIDIA else None,
-        "gpu_sm_clock_mhz": GPU_SMCLK if HAS_NVIDIA else None,
+        "gpu_name": GPU_NAME if HAS_GPU else None,
+        "gpu_vendor": GPU_VENDOR if HAS_GPU else None,
+        "gpu_vram_mb": GPU_VRAM if HAS_GPU else None,
+        "gpu_sm_clock_mhz": (GPU_SMCLK if (HAS_GPU and GPU_SMCLK > 0) else None),
     },
     "scores": {
         "cpu_single": round(single_score, 1),
