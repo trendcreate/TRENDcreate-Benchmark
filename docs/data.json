@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-27T06:46:00+00:00",
-  "count": 3,
+  "generated": "2026-06-27T06:48:04+00:00",
+  "count": 4,
   "entries": [
     {
       "combo": "AMD_Ryzen_7_4700U_with_Radeon_Graphics__N_A",
@@ -46,6 +46,21 @@
       "gpu_vcalc": null,
       "runs": 1,
       "last": "2026-06-27T15:00:25+09:00"
+    },
+    {
+      "combo": "ZZZ_E2E_TEST_CPU__N_A",
+      "cpu": "ZZZ E2E Test CPU",
+      "gpu": null,
+      "arch": "x86_64",
+      "cores": "4",
+      "threads": 8,
+      "l3": "16 MB",
+      "vram_mb": null,
+      "single": 111.0,
+      "multi": 222.0,
+      "gpu_vcalc": null,
+      "runs": 1,
+      "last": "2026-06-27T06:48:04+00:00"
     }
   ]
 }
