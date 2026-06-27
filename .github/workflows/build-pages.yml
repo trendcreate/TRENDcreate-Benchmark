@@ -1,0 +1,42 @@
+name: Build pages data
+
+# score/ が更新されたら docs/data.json を再生成してコミットする
+# (Pull Request マージや手動編集での共有に対応)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score/**'
+      - 'tools/build_pages.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Rebuild docs/data.json
+        run: python tools/build_pages.py
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data.json
+          if git diff --cached --quiet; then
+            echo "data.json already up to date"
+          else
+            git commit -m "docs: rebuild data.json [skip ci]"
+            git push
+          fi

@@ -1,0 +1,86 @@
+name: Ingest score from issue
+
+# Issue 経由で共有されたスコアを自動で取り込み、サイト(data.json)を更新する
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: ingest-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    # score ラベル付き、またはタイトルが [score] で始まる Issue のみ対象
+    if: >-
+      contains(join(github.event.issue.labels.*.name, ','), 'score') ||
+      startsWith(github.event.issue.title, '[score]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Parse issue body and write score JSON
+        id: ingest
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python tools/ingest_issue.py
+
+      - name: Rebuild docs/data.json
+        if: steps.ingest.outputs.status == 'ok'
+        run: python tools/build_pages.py
+
+      - name: Commit & push
+        if: steps.ingest.outputs.status == 'ok'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add score/ docs/data.json
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "scores: ingest #${{ github.event.issue.number }} (${{ steps.ingest.outputs.combo }}) [skip ci]"
+            git push
+          fi
+
+      - name: Comment success and close
+        if: steps.ingest.outputs.status == 'ok'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ スコアを取り込みました: **${{ steps.ingest.outputs.combo }}**\n\n` +
+                    `スコアボードに反映されます → https://trendcreate.github.io/TRENDcreate-Benchmark/\n` +
+                    `ご投稿ありがとうございました！`
+            });
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, labels: ['ingested']
+              });
+            } catch (e) {}
+            await github.rest.issues.update({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, state: 'closed'
+            });
+
+      - name: Comment failure
+        if: steps.ingest.outputs.status == 'error'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `⚠️ スコアの自動取り込みに失敗しました: ${{ steps.ingest.outputs.message }}\n\n` +
+                    `\`\`\`json\` ブロックに score/*.json の中身を貼り付けて、Issue を編集すると再実行されます。`
+            });
