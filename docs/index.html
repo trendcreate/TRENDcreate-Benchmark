@@ -185,10 +185,14 @@
   <header>
     <div class="badge">CPU / GPU BENCHMARK</div>
     <h1>TC&nbsp;<span class="green">Bench</span></h1>
-    <div class="sub">ベンチマーク共有ページ</div>
+    <div class="sub" data-i18n="sub">ベンチマーク共有ページ</div>
     <div class="tag">community scoreboard &amp; diagnostics</div>
-    <div style="margin-top:18px">
-      <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark" target="_blank" rel="noopener">⭐ GitHub リポジトリ</a>
+    <div class="controls" style="justify-content:center;margin-top:18px">
+      <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark" target="_blank" rel="noopener" data-i18n="hdr_repo">⭐ GitHub リポジトリ</a>
+      <span class="seg" id="langseg">
+        <button data-lang="ja">日本語</button>
+        <button data-lang="en">EN</button>
+      </span>
     </div>
   </header>
 
@@ -200,7 +204,7 @@
     </div>
     <div class="controls" style="justify-content:space-between;gap:12px">
       <div class="seg" id="sortbar"></div>
-      <input type="search" id="filter" placeholder="🔍 CPU / GPU 名で絞り込み…" autocomplete="off">
+      <input type="search" id="filter" data-i18n-ph="filter_ph" placeholder="🔍 CPU / GPU 名で絞り込み…" autocomplete="off">
     </div>
     <div class="tablewrap">
       <table id="board">
@@ -215,41 +219,41 @@
   </div>
 
   <div class="panel">
-    <h2>使い方 / How to use</h2>
-    <p class="muted" style="font-size:13.5px;margin-top:0">
+    <h2 data-i18n="how_h">使い方 / How to use</h2>
+    <p class="muted" style="font-size:13.5px;margin-top:0" data-i18n-html="how_desc">
       自分のPCでベンチを実行 → できた <code>score/*.json</code> を下の「スコアを共有」にドロップして
       <b>Issue 送信</b>すると、このランキングに自動で反映されます。外部ライブラリ不要・Python3だけで動きます。
     </p>
-    <p style="margin:14px 0 4px;font-weight:700">Linux / macOS（コピペ1行）</p>
+    <p style="margin:14px 0 4px;font-weight:700" data-i18n="how_linux">Linux / macOS（コピペ1行）</p>
     <pre><code>curl -fsSL https://raw.githubusercontent.com/trendcreate/TRENDcreate-Benchmark/main/Tc_bench.py -o Tc_bench.py &amp;&amp; python3 Tc_bench.py</code></pre>
-    <p style="margin:14px 0 4px;font-weight:700">Windows（PowerShell）</p>
+    <p style="margin:14px 0 4px;font-weight:700" data-i18n="how_win">Windows（PowerShell）</p>
     <pre><code>curl.exe -fsSL https://raw.githubusercontent.com/trendcreate/TRENDcreate-Benchmark/main/Tc_bench.py -o Tc_bench.py
 py Tc_bench.py</code></pre>
     <div class="controls" style="margin-top:16px">
-      <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark" target="_blank" rel="noopener">⭐ GitHub リポジトリを開く</a>
-      <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark#readme" target="_blank" rel="noopener">📖 README を読む</a>
+      <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark" target="_blank" rel="noopener" data-i18n="how_repo">⭐ GitHub リポジトリを開く</a>
+      <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark#readme" target="_blank" rel="noopener" data-i18n="how_readme">📖 README を読む</a>
     </div>
   </div>
 
   <div class="panel">
-    <h2>散布図 (Scatter)</h2>
+    <h2 data-i18n="scatter_h">散布図 (Scatter)</h2>
     <div class="controls">
-      <label class="muted" style="font-size:12px">X軸</label>
+      <label class="muted" style="font-size:12px">X</label>
       <select id="axx"></select>
-      <label class="muted" style="font-size:12px">Y軸</label>
+      <label class="muted" style="font-size:12px">Y</label>
       <select id="axy"></select>
       <span class="legend"><i style="background:var(--nv)"></i>NVIDIA</span>
       <span class="legend"><i style="background:var(--amd)"></i>AMD</span>
       <span class="legend"><i style="background:var(--intel)"></i>Intel</span>
-      <span class="legend"><i style="background:var(--dim)"></i>その他</span>
+      <span class="legend"><i style="background:var(--dim)"></i><span data-i18n="other">その他</span></span>
     </div>
     <div id="scatter" style="overflow:auto"></div>
-    <p class="muted" style="font-size:11.5px;margin:6px 0 0">点にカーソルを合わせると詳細が出ます。右上ほど高性能。</p>
+    <p class="muted" style="font-size:11.5px;margin:6px 0 0" data-i18n="scatter_cap">点にカーソルを合わせると詳細が出ます。右上ほど高性能。</p>
   </div>
 
   <div class="panel">
-    <h2>スコアを共有 — JSONをドラッグ&amp;ドロップ</h2>
-    <p class="muted" style="font-size:13px;margin-top:0">
+    <h2 data-i18n="share_h">スコアを共有 — JSONをドラッグ&amp;ドロップ</h2>
+    <p class="muted" style="font-size:13px;margin-top:0" data-i18n-html="share_desc">
       ベンチ実行後にできた <code>score/&lt;CPU&gt;__&lt;GPU&gt;.json</code> を
       下のエリアに<b>ドラッグ&amp;ドロップ</b>するだけ。その場でランキングに重ねて表示し（あなたの行はピンク＝YOU）、
       ワンクリックで内容入りの <b>Issue を送信</b>できます。
@@ -257,48 +261,48 @@ py Tc_bench.py</code></pre>
 
     <div id="drop" class="dropzone">
       <div class="dz-icon">⬇</div>
-      <div class="dz-main">ここに <b>score/*.json</b> をドロップ</div>
-      <div class="dz-sub">またはクリックしてファイル選択 / 下に貼り付けてもOK</div>
+      <div class="dz-main" data-i18n-html="dz_main">ここに <b>score/*.json</b> をドロップ</div>
+      <div class="dz-sub" data-i18n="dz_sub">またはクリックしてファイル選択 / 下に貼り付けてもOK</div>
       <input type="file" id="file" accept=".json,application/json" hidden>
     </div>
 
     <div id="result" class="result" hidden>
       <div class="result-head">
-        <span class="ok">✓ 読み込みました</span>
+        <span class="ok" data-i18n="loaded">✓ 読み込みました</span>
         <span id="rsummary" class="muted"></span>
       </div>
       <div class="controls" style="margin-top:10px">
-        <button id="issue" class="big">🚀 この内容で Issue を送信</button>
-        <button id="clr">クリア</button>
+        <button id="issue" class="big" data-i18n="issue_btn">🚀 この内容で Issue を送信</button>
+        <button id="clr" data-i18n="clear_btn">クリア</button>
       </div>
     </div>
 
     <details style="margin-top:12px">
-      <summary class="muted" style="cursor:pointer;font-size:12px">JSONを直接貼り付ける場合はこちら</summary>
-      <textarea id="paste" placeholder='ここに score/*.json の中身を貼り付け…' style="margin-top:8px"></textarea>
+      <summary class="muted" style="cursor:pointer;font-size:12px" data-i18n="paste_toggle">JSONを直接貼り付ける場合はこちら</summary>
+      <textarea id="paste" data-i18n-ph="paste_ph" placeholder='ここに score/*.json の中身を貼り付け…' style="margin-top:8px"></textarea>
       <div class="controls" style="margin-top:8px">
-        <button id="cmp">比較 / 読み込み</button>
+        <button id="cmp" data-i18n="cmp_btn">比較 / 読み込み</button>
         <span class="muted" id="cmpmsg"></span>
       </div>
     </details>
   </div>
 
   <div class="panel">
-    <h2>もっと正式に投稿するには (Pull Request)</h2>
-    <ol style="font-size:13px;color:var(--fg)">
+    <h2 data-i18n="pr_h">もっと正式に投稿するには (Pull Request)</h2>
+    <ol style="font-size:13px;color:var(--fg)" data-i18n-html="pr_steps">
       <li>このリポジトリを Fork する</li>
       <li><code>python Tc_bench.py</code> で生成した <code>score/*.json</code> を <code>score/</code> に追加</li>
       <li><code>python tools/build_pages.py</code> を実行して <code>docs/data.json</code> とローカル確認用 <code>summary.html</code> を生成</li>
       <li>Pull Request を送る → マージされるとこのボードに反映されます</li>
     </ol>
-    <p class="muted" style="font-size:12px">
+    <p class="muted" style="font-size:12px" data-i18n="pr_note">
       ※ Issue 送信で投稿された JSON は、メンテナがボードへ取り込みます。
     </p>
   </div>
 
   <div class="panel">
-    <h2>算出方法について</h2>
-    <p class="muted" style="font-size:13.5px;margin-top:0">
+    <h2 data-i18n="calc_h">算出方法について</h2>
+    <p class="muted" style="font-size:13.5px;margin-top:0" data-i18n-html="calc_desc">
       スコアは他マシンと相対比較するための<b>独自指標</b>です。CPU は実際に重い計算（素数判定＋浮動小数点演算）を
       回した<b>実測時間</b>から算出するため、オーバークロック等の成果はそのまま反映されます。
       GPU は計測負荷をかけず、スペック値から算出する「ロマン枠（V-Calc）」です。
@@ -306,26 +310,26 @@ py Tc_bench.py</code></pre>
     <pre><code>CPU Single = 10000 / シングル実行秒数
 CPU Multi  = 10000 × 論理スレッド数 / マルチ実行秒数
 GPU V-Calc = 最大クロック(MHz) × (VRAM_GB ^ 1.5) / 10   ※クロック不明時は公称 1500MHz</code></pre>
-    <ul style="font-size:13px;color:var(--fg)">
+    <ul style="font-size:13px;color:var(--fg)" data-i18n-html="calc_list">
       <li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li>
       <li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li>
       <li><b>GPU V-Calc</b> … VRAM 容量を重視した仮想スコア（NVIDIA / AMD 対応、未検出ならスキップ）</li>
     </ul>
-    <p class="muted" style="font-size:12.5px">
+    <p class="muted" style="font-size:12.5px" data-i18n="calc_idle">
       計測はアイドル状態を推奨。電源/温度による周波数制御や同時実行プロセスでスコアは変動します。
     </p>
 
     <div class="result" style="background:rgba(224,36,126,.06);border-color:var(--pink);margin-top:18px">
-      <p style="margin:0 0 6px;font-weight:700;color:var(--pink)">⚠️ 偽造JSONの投稿について</p>
-      <p class="muted" style="font-size:13px;margin:0">
+      <p style="margin:0 0 6px;font-weight:700;color:var(--pink)" data-i18n="forge_h">⚠️ 偽造JSONの投稿について</p>
+      <p class="muted" style="font-size:13px;margin:0" data-i18n-html="forge_desc">
         公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を
         <code>[score]</code> Issue で投稿しないでください。<br>
         「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、専用フォーラム（GitHub Discussions）で歓迎です👇
       </p>
       <div class="controls" style="margin-top:12px">
-        <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/13" target="_blank" rel="noopener">🃏 ジョークスペック申請所</a>
-        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/14" target="_blank" rel="noopener">📊 スペック比較・雑談</a>
-        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions" target="_blank" rel="noopener">💬 フォーラム一覧</a>
+        <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/13" target="_blank" rel="noopener" data-i18n="forum_joke">🃏 ジョークスペック申請所</a>
+        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/14" target="_blank" rel="noopener" data-i18n="forum_compare">📊 スペック比較・雑談</a>
+        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions" target="_blank" rel="noopener" data-i18n="forum_all">💬 フォーラム一覧</a>
       </div>
     </div>
   </div>
@@ -343,6 +347,82 @@ let mineRaw = "";          // 投稿用に元のJSONテキストを保持
 let tab = "cpu";
 let sortKey = "multi";
 let filterText = "";
+
+// ===== 多言語 (i18n) =====
+const L = {
+  ja: {
+    sub:"ベンチマーク共有ページ", hdr_repo:"⭐ GitHub リポジトリ",
+    filter_ph:"🔍 CPU / GPU 名で絞り込み…",
+    how_h:"使い方 / How to use",
+    how_desc:'自分のPCでベンチを実行 → できた <code>score/*.json</code> を下の「スコアを共有」にドロップして<b>Issue 送信</b>すると、このランキングに自動で反映されます。外部ライブラリ不要・Python3だけで動きます。',
+    how_linux:"Linux / macOS（コピペ1行）", how_win:"Windows（PowerShell）",
+    how_repo:"⭐ GitHub リポジトリを開く", how_readme:"📖 README を読む",
+    scatter_h:"散布図 (Scatter)", other:"その他",
+    scatter_cap:"点にカーソルを合わせると詳細が出ます。右上ほど高性能。",
+    share_h:"スコアを共有 — JSONをドラッグ&ドロップ",
+    share_desc:'ベンチ実行後にできた <code>score/&lt;CPU&gt;__&lt;GPU&gt;.json</code> を下のエリアに<b>ドラッグ&amp;ドロップ</b>するだけ。その場でランキングに重ねて表示し（あなたの行はピンク＝YOU）、ワンクリックで内容入りの <b>Issue を送信</b>できます。',
+    dz_main:'ここに <b>score/*.json</b> をドロップ',
+    dz_sub:"またはクリックしてファイル選択 / 下に貼り付けてもOK",
+    loaded:"✓ 読み込みました", issue_btn:"🚀 この内容で Issue を送信", clear_btn:"クリア",
+    paste_toggle:"JSONを直接貼り付ける場合はこちら", paste_ph:"ここに score/*.json の中身を貼り付け…",
+    cmp_btn:"比較 / 読み込み",
+    pr_h:"もっと正式に投稿するには (Pull Request)",
+    pr_steps:"<li>このリポジトリを Fork する</li><li><code>python Tc_bench.py</code> で生成した <code>score/*.json</code> を <code>score/</code> に追加</li><li><code>python tools/build_pages.py</code> を実行して <code>docs/data.json</code> とローカル確認用 <code>summary.html</code> を生成</li><li>Pull Request を送る → マージされるとこのボードに反映されます</li>",
+    pr_note:"※ Issue 送信で投稿された JSON は、メンテナがボードへ取り込みます。",
+    calc_h:"算出方法について",
+    calc_desc:'スコアは他マシンと相対比較するための<b>独自指標</b>です。CPU は実際に重い計算（素数判定＋浮動小数点演算）を回した<b>実測時間</b>から算出するため、オーバークロック等の成果はそのまま反映されます。GPU は計測負荷をかけず、スペック値から算出する「ロマン枠（V-Calc）」です。',
+    calc_list:"<li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li><li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li><li><b>GPU V-Calc</b> … VRAM 容量を重視した仮想スコア（NVIDIA / AMD 対応、未検出ならスキップ）</li>",
+    calc_idle:"計測はアイドル状態を推奨。電源/温度による周波数制御や同時実行プロセスでスコアは変動します。",
+    forge_h:"⚠️ 偽造JSONの投稿について",
+    forge_desc:'公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を <code>[score]</code> Issue で投稿しないでください。<br>「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、専用フォーラム（GitHub Discussions）で歓迎です👇',
+    forum_joke:"🃏 ジョークスペック申請所", forum_compare:"📊 スペック比較・雑談", forum_all:"💬 フォーラム一覧",
+    loaded_msg:"✓ 読み込みました", parse_fail:"✗ JSONの解析に失敗: ", parse_alert:"JSONの解析に失敗しました:",
+    drop_invalid:"JSONファイル (score/*.json) をドロップしてください", paste_need:"JSONを貼り付けてください",
+    issue_need:"先にJSONをドロップ/貼り付けしてください", no_data:"data.json 未生成",
+    issue_body_title:"TC Bench スコア投稿", issue_body_note:"以下は自動添付された score JSON です。編集不要",
+  },
+  en: {
+    sub:"Benchmark Scoreboard", hdr_repo:"⭐ GitHub Repo",
+    filter_ph:"🔍 Filter by CPU / GPU name…",
+    how_h:"How to use / 使い方",
+    how_desc:'Run the benchmark on your PC → drag the resulting <code>score/*.json</code> onto "Share your score" below and <b>send an Issue</b>; it is added to this ranking automatically. No external libraries — Python 3 only.',
+    how_linux:"Linux / macOS (one-liner)", how_win:"Windows (PowerShell)",
+    how_repo:"⭐ Open GitHub Repo", how_readme:"📖 Read README",
+    scatter_h:"Scatter plot", other:"Other",
+    scatter_cap:"Hover a point for details. Top-right = higher performance.",
+    share_h:"Share your score — drag & drop JSON",
+    share_desc:'Just <b>drag & drop</b> the <code>score/&lt;CPU&gt;__&lt;GPU&gt;.json</code> file here. It overlays on the ranking instantly (your row is pink = YOU), and you can <b>send a pre-filled Issue</b> in one click.',
+    dz_main:'Drop <b>score/*.json</b> here',
+    dz_sub:"or click to choose a file / paste below",
+    loaded:"✓ Loaded", issue_btn:"🚀 Submit as a GitHub Issue", clear_btn:"Clear",
+    paste_toggle:"Paste JSON directly", paste_ph:"Paste the contents of score/*.json here…",
+    cmp_btn:"Compare / Load",
+    pr_h:"For a formal submission (Pull Request)",
+    pr_steps:"<li>Fork this repository</li><li>Add the <code>score/*.json</code> produced by <code>python Tc_bench.py</code> into <code>score/</code></li><li>Run <code>python tools/build_pages.py</code> to regenerate <code>docs/data.json</code> and the local <code>summary.html</code></li><li>Open a Pull Request → it appears on this board once merged</li>",
+    pr_note:"* JSON submitted via Issue is ingested into the board by a maintainer.",
+    calc_h:"About the scoring",
+    calc_desc:'Scores are an <b>original index</b> for relative comparison. The CPU score is derived from the <b>measured time</b> of real heavy work (prime testing + floating-point math), so overclocking is reflected directly. The GPU score is a "for-fun" value (V-Calc) computed from spec values, with no GPU load.',
+    calc_list:"<li><b>CPU Single</b> … measured single-core performance (faster = higher)</li><li><b>CPU Multi</b> … measured performance using all logical threads</li><li><b>GPU V-Calc</b> … VRAM-weighted virtual score (NVIDIA / AMD; skipped if none detected)</li>",
+    calc_idle:"Measure while idle. Scores vary with power/thermal frequency scaling and other running processes.",
+    forge_h:"⚠️ About forged JSON",
+    forge_desc:'Submit <b>only real measured scores</b> to the official ranking. Do not post tampered/forged JSON via <code>[score]</code> Issues.<br>Fantasy / joke specs (e.g. "my ultimate dream rig") are welcome in the dedicated forum (GitHub Discussions) 👇',
+    forum_joke:"🃏 Joke-spec submissions", forum_compare:"📊 Spec talk & comparison", forum_all:"💬 All discussions",
+    loaded_msg:"✓ Loaded", parse_fail:"✗ JSON parse failed: ", parse_alert:"Failed to parse JSON:",
+    drop_invalid:"Please drop a JSON file (score/*.json)", paste_need:"Please paste JSON",
+    issue_need:"Drop or paste JSON first", no_data:"data.json not generated",
+    issue_body_title:"TC Bench score submission", issue_body_note:"Auto-attached score JSON below. No need to edit.",
+  },
+};
+let LANG = localStorage.getItem("tclang") || ((navigator.language||"").toLowerCase().startsWith("ja") ? "ja" : "en");
+const t = k => (L[LANG] && L[LANG][k] != null) ? L[LANG][k] : (L.ja[k] != null ? L.ja[k] : k);
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const k=el.getAttribute("data-i18n"); if(L[LANG][k]!=null) el.textContent=L[LANG][k]; });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ const k=el.getAttribute("data-i18n-html"); if(L[LANG][k]!=null) el.innerHTML=L[LANG][k]; });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ const k=el.getAttribute("data-i18n-ph"); if(L[LANG][k]!=null) el.placeholder=L[LANG][k]; });
+  document.querySelectorAll("#langseg [data-lang]").forEach(b=>b.classList.toggle("active", b.dataset.lang===LANG));
+}
+function setLang(l){ LANG=l; localStorage.setItem("tclang",l); applyI18n(); render(); renderScatter(); }
 
 // タブごとの並び替え候補
 const SORTS = {
@@ -436,9 +516,11 @@ function render(){
     tb.appendChild(tr);
   });
 
+  const _n = DATA.count??DATA.entries.length;
   document.querySelector("#meta").textContent =
-    `全 ${DATA.count??DATA.entries.length} 件` + (DATA.generated?` · 更新 ${DATA.generated.slice(0,10)}`:"");
-  document.querySelector("#shown").textContent = `表示 ${rows.length} 件`;
+    (LANG==="ja"?`全 ${_n} 件`:`${_n} entries`) +
+    (DATA.generated?(LANG==="ja"?` · 更新 ${DATA.generated.slice(0,10)}`:` · updated ${DATA.generated.slice(0,10)}`):"");
+  document.querySelector("#shown").textContent = LANG==="ja"?`表示 ${rows.length} 件`:`showing ${rows.length}`;
 }
 
 function parseMine(text){
@@ -527,6 +609,10 @@ function renderScatter(){
 }
 buildAxisSelects();
 
+// 言語トグル
+document.querySelectorAll("#langseg [data-lang]").forEach(b=> b.onclick=()=>setLang(b.dataset.lang));
+applyI18n();
+
 const drop = document.querySelector("#drop");
 const fileInput = document.querySelector("#file");
 const result = document.querySelector("#result");
@@ -539,20 +625,20 @@ function loadText(text, msgEl){
     result.hidden = false;
     const g = mine.gpu ? ` / ${mine.gpu}` : "";
     rsummary.textContent = `${mine.cpu}${g} — Single ${fmt(mine.single)} / Multi ${fmt(mine.multi)}`;
-    if(msgEl) msgEl.textContent = "✓ 読み込みました";
+    if(msgEl) msgEl.textContent = t("loaded_msg");
     render(); renderScatter();
     result.scrollIntoView({behavior:"smooth", block:"nearest"});
     return true;
   }catch(e){
-    if(msgEl) msgEl.textContent = "✗ JSONの解析に失敗: "+e.message;
-    alert("JSONの解析に失敗しました:\n"+e.message);
+    if(msgEl) msgEl.textContent = t("parse_fail")+e.message;
+    alert(t("parse_alert")+"\n"+e.message);
     return false;
   }
 }
 function readFile(f){
   if(!f) return;
   if(!/\.json$/i.test(f.name) && f.type && f.type.indexOf("json")<0){
-    alert("JSONファイル (score/*.json) をドロップしてください"); return;
+    alert(t("drop_invalid")); return;
   }
   const rd = new FileReader();
   rd.onload = ()=>{ document.querySelector("#paste").value = rd.result; loadText(rd.result); };
@@ -577,10 +663,10 @@ window.addEventListener("dragover", e=>e.preventDefault());
 window.addEventListener("drop", e=>e.preventDefault());
 
 document.querySelector("#cmp").onclick=()=>{
-  const t=document.querySelector("#paste").value.trim();
+  const txt=document.querySelector("#paste").value.trim();
   const msg=document.querySelector("#cmpmsg");
-  if(!t){msg.textContent="JSONを貼り付けてください";return;}
-  loadText(t, msg);
+  if(!txt){msg.textContent=t("paste_need");return;}
+  loadText(txt, msg);
 };
 document.querySelector("#clr").onclick=()=>{
   mine=null; mineRaw="";
@@ -589,15 +675,15 @@ document.querySelector("#clr").onclick=()=>{
   result.hidden=true; render(); renderScatter();
 };
 document.querySelector("#issue").onclick=()=>{
-  if(!mineRaw){ alert("先にJSONをドロップ/貼り付けしてください"); return; }
+  if(!mineRaw){ alert(t("issue_need")); return; }
   const cpu = (mine&&mine.cpu)||"unknown";
   const gpu = (mine&&mine.gpu)? " + "+mine.gpu : "";
   const title = `[score] ${cpu}${gpu}`.slice(0,120);
   const body =
-    `### TC Bench スコア投稿\n\n`+
+    `### ${t("issue_body_title")}\n\n`+
     `- CPU: ${cpu}\n- GPU: ${(mine&&mine.gpu)||"-"}\n`+
     `- Single: ${fmt(mine.single)} / Multi: ${fmt(mine.multi)} / GPU V-Calc: ${fmt(mine.gpu_vcalc)}\n\n`+
-    "<!-- 以下は自動添付された score JSON です。編集不要 -->\n```json\n"+mineRaw.trim()+"\n```\n";
+    `<!-- ${t("issue_body_note")} -->\n\`\`\`json\n`+mineRaw.trim()+"\n```\n";
   const url = `https://github.com/${REPO}/issues/new?labels=${encodeURIComponent("score")}`+
               `&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
   window.open(url, "_blank", "noopener");
@@ -606,7 +692,7 @@ document.querySelector("#issue").onclick=()=>{
 fetch("data.json?_="+Date.now())
   .then(r=>r.ok?r.json():Promise.reject(r.status))
   .then(d=>{DATA=d;render();renderScatter();})
-  .catch(()=>{document.querySelector("#meta").textContent="data.json 未生成";render();renderScatter();});
+  .catch(()=>{document.querySelector("#meta").textContent=t("no_data");render();renderScatter();});
 </script>
 </body>
 </html>
