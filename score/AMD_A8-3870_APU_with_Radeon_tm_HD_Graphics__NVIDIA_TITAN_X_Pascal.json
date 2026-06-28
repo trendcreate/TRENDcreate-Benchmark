@@ -1,0 +1,32 @@
+{
+  "combo": "AMD_A8-3870_APU_with_Radeon_tm_HD_Graphics__NVIDIA_TITAN_X_Pascal",
+  "system": {
+    "cpu_model": "AMD A8-3870 APU with Radeon(tm) HD Graphics",
+    "architecture": "x86_64",
+    "cores_per_socket": "4",
+    "logical_processors": 4,
+    "cpu_mhz": null,
+    "l3_cache": "N/A",
+    "gpu_name": "NVIDIA TITAN X (Pascal)",
+    "gpu_vram_mb": 12288.0,
+    "gpu_sm_clock_mhz": 1911.0
+  },
+  "best": {
+    "cpu_single": 2250.0,
+    "cpu_multi": 8867.8,
+    "gpu_vcalc": 7943.9,
+    "multi_ratio": 0.99
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-28T04:06:13+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 2250.0,
+        "cpu_multi": 8867.8,
+        "gpu_vcalc": 7943.9,
+        "multi_ratio": 0.99
+      }
+    }
+  ]
+}
