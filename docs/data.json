@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-28T04:06:13+00:00",
-  "count": 10,
+  "generated": "2026-06-29T22:24:41+00:00",
+  "count": 11,
   "entries": [
     {
       "combo": "AMD_A8-3870_APU_with_Radeon_tm_HD_Graphics__NVIDIA_TITAN_X_Pascal",
@@ -145,6 +145,22 @@
       "gpu_vcalc": 540.5,
       "runs": 1,
       "last": "2026-06-27T23:27:12+00:00"
+    },
+    {
+      "combo": "Intel_R_Xeon_R_CPU_E5-2650_v4_2.20GHz__NVIDIA_TITAN_X_Pascal",
+      "cpu": "Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz",
+      "gpu": "NVIDIA TITAN X (Pascal)",
+      "arch": "AMD64",
+      "cores": "12",
+      "threads": 24,
+      "cpu_mhz": 2201.0,
+      "l3": "30 MB",
+      "vram_mb": 12288.0,
+      "single": 807.3,
+      "multi": 11732.5,
+      "gpu_vcalc": 7943.9,
+      "runs": 1,
+      "last": "2026-06-29T22:24:41+00:00"
     },
     {
       "combo": "Intel_R_Xeon_R_Gold_6230_CPU_2.10GHz__N_A",

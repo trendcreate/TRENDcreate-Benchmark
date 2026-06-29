@@ -1,0 +1,32 @@
+{
+  "combo": "Intel_R_Xeon_R_CPU_E5-2650_v4_2.20GHz__NVIDIA_TITAN_X_Pascal",
+  "system": {
+    "cpu_model": "Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz",
+    "architecture": "AMD64",
+    "cores_per_socket": "12",
+    "logical_processors": 24,
+    "cpu_mhz": 2201.0,
+    "l3_cache": "30 MB",
+    "gpu_name": "NVIDIA TITAN X (Pascal)",
+    "gpu_vram_mb": 12288.0,
+    "gpu_sm_clock_mhz": 1911.0
+  },
+  "best": {
+    "cpu_single": 807.3,
+    "cpu_multi": 11732.5,
+    "gpu_vcalc": 7943.9,
+    "multi_ratio": 0.61
+  },
+  "runs": [
+    {
+      "timestamp": "2026-06-29T22:24:41+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 807.3,
+        "cpu_multi": 11732.5,
+        "gpu_vcalc": 7943.9,
+        "multi_ratio": 0.61
+      }
+    }
+  ]
+}
