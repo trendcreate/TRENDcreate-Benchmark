@@ -1,6 +1,6 @@
 {
-  "generated": "2026-06-29T22:24:41+00:00",
-  "count": 11,
+  "generated": "2026-06-29T22:31:15+00:00",
+  "count": 12,
   "entries": [
     {
       "combo": "AMD_A8-3870_APU_with_Radeon_tm_HD_Graphics__NVIDIA_TITAN_X_Pascal",
@@ -81,6 +81,22 @@
       "gpu_vcalc": 15247.6,
       "runs": 2,
       "last": "2026-06-27T07:24:27+00:00"
+    },
+    {
+      "combo": "AMD_Ryzen_7_5800X3D_8-Core_Processor__Card_Series_AMD_Radeon_RX_9070_XT",
+      "cpu": "AMD Ryzen 7 5800X3D 8-Core Processor",
+      "gpu": "Card Series: \t\tAMD Radeon RX 9070 XT",
+      "arch": "x86_64",
+      "cores": "8",
+      "threads": 16,
+      "cpu_mhz": null,
+      "l3": "96 MiB (1 インスタンス)",
+      "vram_mb": 16304.0,
+      "single": 7921.1,
+      "multi": 67127.0,
+      "gpu_vcalc": 9529.8,
+      "runs": 1,
+      "last": "2026-06-29T22:31:15+00:00"
     },
     {
       "combo": "Intel_R_Atom_TM_CPU_N455_1.66GHz__N_A",
