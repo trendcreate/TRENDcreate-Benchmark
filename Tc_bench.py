@@ -28,6 +28,9 @@ DEFAULT_WORK_LIMIT = int(os.environ.get("TC_BENCH_WORK_LIMIT", "600000"))
 SCORE_FACTOR = 10000.0
 NOMINAL_GPU_CLOCK_MHZ = 1500.0
 SORT_KEYS = ("single", "multi", "gpu")
+# 画像生成(Diffusion)テストのゲート条件: VRAM総量 >= 4GB かつ 空き >= 2GB
+DIFFUSION_MIN_VRAM_MB = 4096
+DIFFUSION_MIN_FREE_MB = 2048
 
 
 def configure_stdio():
@@ -166,6 +169,7 @@ def default_system_info():
         "gpu_name": None,
         "gpu_vendor": None,
         "gpu_vram_mb": None,
+        "gpu_vram_free_mb": None,
         "gpu_sm_clock_mhz": None,
     }
 
@@ -175,7 +179,7 @@ def query_nvidia_smi():
         return {}
     out = run_cmd([
         "nvidia-smi",
-        "--query-gpu=name,memory.total,clocks.max.sm",
+        "--query-gpu=name,memory.total,memory.free,clocks.max.sm",
         "--format=csv,noheader,nounits",
     ])
     line = next((x.strip() for x in out.splitlines() if x.strip()), "")
@@ -186,7 +190,8 @@ def query_nvidia_smi():
         "gpu_name": parts[0] if len(parts) > 0 else "NVIDIA GPU",
         "gpu_vendor": "NVIDIA",
         "gpu_vram_mb": first_float(parts[1]) if len(parts) > 1 else None,
-        "gpu_sm_clock_mhz": first_float(parts[2]) if len(parts) > 2 else None,
+        "gpu_vram_free_mb": first_float(parts[2]) if len(parts) > 2 else None,
+        "gpu_sm_clock_mhz": first_float(parts[3]) if len(parts) > 3 else None,
     }
 
 
@@ -328,12 +333,15 @@ def query_amd_sysfs():
         if read_text(os.path.join(dev, "vendor")).lower() != "0x1002":
             continue
         vram_bytes = first_int(read_text(os.path.join(dev, "mem_info_vram_total")))
+        used_bytes = first_int(read_text(os.path.join(dev, "mem_info_vram_used")))
         clk_values = [int(x) for x in re.findall(r"(\d+)\s*mhz", read_text(os.path.join(dev, "pp_dpm_sclk")), re.I)]
         name = query_lspci_name(r"AMD|ATI|Radeon") or "AMD GPU"
+        free_mb = ((vram_bytes - used_bytes) / 1048576.0) if (vram_bytes and used_bytes is not None) else None
         return {
             "gpu_name": name,
             "gpu_vendor": "AMD",
             "gpu_vram_mb": (vram_bytes / 1048576.0) if vram_bytes else None,
+            "gpu_vram_free_mb": free_mb,
             "gpu_sm_clock_mhz": max(clk_values) if clk_values else None,
         }
     return {}
@@ -475,6 +483,18 @@ def print_system_info(info):
             print("  VRAM総容量         : {:.0f} MB [クロック不明 - 公称値で算出]".format(vram))
         else:
             print("  VRAM総容量         : N/A [GPUスコアはスキップ]")
+        free = info.get("gpu_vram_free_mb")
+        if free is not None:
+            print("  VRAM空き容量       : {:.0f} MB".format(free))
+        ready, _total, _free = diffusion_gate(info)
+        if ready is True:
+            print("  画像生成テスト     : 対象 [VRAM {}GB以上 & 空き {}GB以上] ※実測は今後対応".format(
+                DIFFUSION_MIN_VRAM_MB // 1024, DIFFUSION_MIN_FREE_MB // 1024))
+        elif ready is False:
+            print("  画像生成テスト     : 対象外 [VRAM {}GB以上 & 空き {}GB以上が必要]".format(
+                DIFFUSION_MIN_VRAM_MB // 1024, DIFFUSION_MIN_FREE_MB // 1024))
+        else:
+            print("  画像生成テスト     : 判定不可 [空きVRAM未取得]")
     else:
         print("  GPU                : NVIDIA/AMD 未検出 - GPUスコアはスキップ [OOM回避モード]")
     print()
@@ -500,6 +520,26 @@ def score_gpu(info):
     if estimated:
         clock = NOMINAL_GPU_CLOCK_MHZ
     return (clock * ((vram / 1024.0) ** 1.5)) / 10.0, estimated
+
+
+def diffusion_gate(info):
+    """画像生成(Diffusion)テストのゲート判定。
+
+    戻り値 (ready, total_mb, free_mb):
+      ready = True  … VRAM総量>=4GB かつ 空き>=2GB（テスト対象）
+      ready = False … 条件を満たさない（対象外）
+      ready = None  … 空きVRAMが取得できず判定不可
+    """
+    vendor = info.get("gpu_vendor")
+    total = info.get("gpu_vram_mb")
+    free = info.get("gpu_vram_free_mb")
+    if vendor not in ("NVIDIA", "AMD") or not total:
+        return False, total, free
+    if total < DIFFUSION_MIN_VRAM_MB:
+        return False, total, free
+    if free is None:
+        return None, total, free
+    return (free >= DIFFUSION_MIN_FREE_MB), total, free
 
 
 def atomic_write_json(path, data):
@@ -536,7 +576,9 @@ def save_score(score_dir, info, scores, single_time, multi_time, ratio):
             "gpu_name": info.get("gpu_name"),
             "gpu_vendor": info.get("gpu_vendor"),
             "gpu_vram_mb": info.get("gpu_vram_mb"),
+            "gpu_vram_free_mb": info.get("gpu_vram_free_mb"),
             "gpu_sm_clock_mhz": info.get("gpu_sm_clock_mhz"),
+            "diffusion_ready": diffusion_gate(info)[0],
         },
         "scores": {
             "cpu_single": round(scores["single"], 1),
