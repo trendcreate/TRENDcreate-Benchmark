@@ -31,6 +31,9 @@ SORT_KEYS = ("single", "multi", "gpu")
 # 画像生成(Diffusion)テストのゲート条件: VRAM総量 >= 4GB かつ 空き >= 2GB
 DIFFUSION_MIN_VRAM_MB = 4096
 DIFFUSION_MIN_FREE_MB = 2048
+# プラグイン (後からダウンロードして追加できる拡張ベンチ)
+PLUGIN_DIR = os.path.join(ROOT, "plugins")
+PLUGIN_BASE_URL = "https://raw.githubusercontent.com/trendcreate/TRENDcreate-Benchmark/main/plugins/"
 
 
 def configure_stdio():
@@ -542,6 +545,157 @@ def diffusion_gate(info):
     return (free >= DIFFUSION_MIN_FREE_MB), total, free
 
 
+# ---------------------------------------------------------------------------
+# プラグイン機構 (後からダウンロードして追加できる拡張ベンチ)
+#   plugins/*.py が満たすべきインターフェース:
+#     NAME        : str           プラグイン名
+#     DESCRIPTION : str           説明 (任意)
+#     available() -> (bool, str)  依存が揃っているか + メッセージ (任意)
+#     should_run(info) -> bool    実行条件 (任意, 既定 True)
+#     run(info) -> dict           {score_key: 数値, ...} を返す
+# ---------------------------------------------------------------------------
+def _load_plugin_module(path):
+    import importlib.util
+    mod_name = "tcplugin_" + re.sub(r"[^A-Za-z0-9_]", "_", os.path.splitext(os.path.basename(path))[0])
+    spec = importlib.util.spec_from_file_location(mod_name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def discover_plugins():
+    plugins = []
+    if not os.path.isdir(PLUGIN_DIR):
+        return plugins
+    for path in sorted(glob.glob(os.path.join(PLUGIN_DIR, "*.py"))):
+        if os.path.basename(path).startswith("_"):
+            continue
+        try:
+            module = _load_plugin_module(path)
+        except Exception as exc:
+            print("  [plugin] 読み込み失敗 {}: {}".format(os.path.basename(path), exc))
+            continue
+        if hasattr(module, "run") and hasattr(module, "NAME"):
+            plugins.append(module)
+    return plugins
+
+
+def run_plugins(info):
+    """インストール済みプラグインを実行し {score_key: value} を返す。"""
+    results = {}
+    plugins = discover_plugins()
+    if not plugins:
+        return results
+    print("  -- 追加ベンチ (プラグイン) --")
+    for module in plugins:
+        name = getattr(module, "NAME", "?")
+        try:
+            ok, message = module.available() if hasattr(module, "available") else (True, "")
+        except Exception as exc:
+            ok, message = False, str(exc)
+        if not ok:
+            print("  [{}] スキップ: {}".format(name, message or "利用不可"))
+            continue
+        try:
+            if hasattr(module, "should_run") and not module.should_run(info):
+                print("  [{}] スキップ: 実行条件を満たしません".format(name))
+                continue
+        except Exception as exc:
+            print("  [{}] スキップ: {}".format(name, exc))
+            continue
+        try:
+            out = module.run(info) or {}
+        except Exception as exc:
+            print("  [{}] 実行失敗: {}".format(name, exc))
+            continue
+        if isinstance(out, dict):
+            clean = {k: float(v) for k, v in out.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+            results.update(clean)
+            detail = ", ".join("{}={:.1f}".format(k, v) for k, v in clean.items()) or "結果なし"
+            print("  [{}] 完了: {}".format(name, detail))
+    print()
+    return results
+
+
+def _fetch_url(url, timeout=30):
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "TC-Bench"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read()
+
+
+def load_plugin_registry():
+    local = os.path.join(PLUGIN_DIR, "registry.json")
+    if os.path.exists(local):
+        try:
+            with open(local, encoding="utf-8") as f:
+                return json.load(f).get("plugins", [])
+        except Exception:
+            pass
+    try:
+        data = json.loads(_fetch_url(PLUGIN_BASE_URL + "registry.json").decode("utf-8"))
+        return data.get("plugins", [])
+    except Exception as exc:
+        print("  レジストリ取得に失敗しました: {}".format(exc))
+        return []
+
+
+def run_plugin_command(args):
+    action = args.action or "list"
+    registry = load_plugin_registry()
+
+    if action == "list":
+        if not registry:
+            print("利用可能なプラグインがありません。")
+            return 0
+        print("  利用可能なプラグイン:")
+        for entry in registry:
+            fname = entry.get("file") or (entry.get("name", "") + ".py")
+            installed = os.path.exists(os.path.join(PLUGIN_DIR, fname))
+            print("  - {:<12} {} {}".format(entry.get("name"), "[導入済]" if installed else "[未導入]", entry.get("description", "")))
+            if entry.get("requires"):
+                print("      依存: {}".format(entry["requires"]))
+        print("\n  導入: python Tc_bench.py plugin install <名前>")
+        return 0
+
+    name = args.name
+    if not name:
+        print("プラグイン名を指定してください。例: python Tc_bench.py plugin {} diffusion".format(action))
+        return 1
+    entry = next((p for p in registry if p.get("name") == name), None)
+    fname = (entry.get("file") if entry else None) or (name + ".py")
+    dest = os.path.join(PLUGIN_DIR, fname)
+
+    if action == "remove":
+        if os.path.exists(dest):
+            os.remove(dest)
+            print("削除しました: {}".format(dest))
+        else:
+            print("プラグイン '{}' は未導入です。".format(name))
+        return 0
+
+    if action == "install":
+        if not entry:
+            print("プラグイン '{}' が見つかりません。`plugin list` で確認してください。".format(name))
+            return 1
+        os.makedirs(PLUGIN_DIR, exist_ok=True)
+        try:
+            data = _fetch_url(PLUGIN_BASE_URL + fname)
+        except Exception as exc:
+            print("ダウンロードに失敗しました: {}".format(exc))
+            return 1
+        with open(dest, "wb") as f:
+            f.write(data)
+        print("インストールしました: {}".format(dest))
+        if entry.get("requires"):
+            print("※ このプラグインは追加の依存が必要です: {}".format(entry["requires"]))
+            print("   （依存が無い場合、ベンチ実行時に自動でスキップされます）")
+        return 0
+
+    print("使い方: python Tc_bench.py plugin [list | install <名前> | remove <名前>]")
+    return 0
+
+
 def atomic_write_json(path, data):
     tmp = path + ".tmp"
     try:
@@ -559,7 +713,7 @@ def atomic_write_json(path, data):
         raise
 
 
-def save_score(score_dir, info, scores, single_time, multi_time, ratio):
+def save_score(score_dir, info, scores, single_time, multi_time, ratio, plugin_scores=None):
     combo = "{}__{}".format(slug(info.get("cpu_model")), slug(info.get("gpu_name") or "N_A"))
     path = os.path.join(score_dir, combo + ".json")
     record = {
@@ -589,6 +743,8 @@ def save_score(score_dir, info, scores, single_time, multi_time, ratio):
             "multi_time_s": round(multi_time, 3),
         },
     }
+    for key, value in (plugin_scores or {}).items():
+        record["scores"][key] = round(value, 1)
     data = {"combo": combo, "system": record["system"], "best": {}, "runs": []}
     if os.path.exists(path):
         try:
@@ -734,6 +890,9 @@ def run_benchmark(args):
         print("  GPU V-Calc [........................................]   SKIPPED (NVIDIA/AMD未検出 / OOM回避)")
     print("  ------------------------------------------------------------------")
     print("  マルチコア倍率 : {:.2f}x  (Single {:.2f}s / Multi {:.2f}s)".format(ratio, single_time, multi_time))
+    print()
+
+    plugin_scores = {} if getattr(args, "no_plugins", False) else run_plugins(info)
 
     if args.no_save:
         print("  --no-save 指定のためスコア保存をスキップしました。")
@@ -745,6 +904,7 @@ def run_benchmark(args):
             single_time,
             multi_time,
             ratio,
+            plugin_scores,
         )
         print("  スコアを保存しました: {}".format(path))
         print("  (このJSONファイルを共有すれば結果を比較できます)")
@@ -840,6 +1000,7 @@ def build_parser():
     bench.add_argument("--no-save", action="store_true", help="結果を score/*.json に保存しない")
     bench.add_argument("--no-summary", action="store_true", help="ベンチ後の summary.html 生成をスキップする")
     bench.add_argument("--open-summary", action="store_true", help="確認なしで summary.html をブラウザで開く")
+    bench.add_argument("--no-plugins", action="store_true", help="追加ベンチ (plugins/) を実行しない")
     bench.set_defaults(func=run_benchmark)
 
     summary = sub.add_parser("summary", help="score/*.json を集計してランキング表示します")
@@ -848,13 +1009,19 @@ def build_parser():
     summary.add_argument("--score-dir", default=DEFAULT_SCORE_DIR, help="スコアJSONの保存先")
     summary.set_defaults(func=run_summary)
 
+    plugin = sub.add_parser("plugin", help="追加ベンチ(プラグイン)の一覧/導入/削除")
+    plugin.add_argument("action", nargs="?", choices=("list", "install", "remove"), default="list",
+                        help="list / install <名前> / remove <名前>")
+    plugin.add_argument("name", nargs="?", help="プラグイン名 (install / remove 時)")
+    plugin.set_defaults(func=run_plugin_command)
+
     return parser
 
 
 def normalize_argv(argv):
     if not argv:
         return ["bench"]
-    if argv[0] in ("-h", "--help", "bench", "summary"):
+    if argv[0] in ("-h", "--help", "bench", "summary", "plugin"):
         return argv
     return ["bench"] + argv
 

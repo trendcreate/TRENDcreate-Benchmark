@@ -88,6 +88,22 @@ python tools/build_pages.py
 
 ベンチ完了後のブラウザ起動は、`BROWSER` 環境変数を優先し、Windows は既定の関連付け、macOS は `open`、Linux は `xdg-open` などOS標準の方法を使います。
 
+## プラグイン (拡張ベンチ / 後から追加)
+
+コア本体は依存ゼロのまま、追加のベンチマークを**プラグインとして後からダウンロード**して実行できます。
+
+```bash
+python Tc_bench.py plugin list                # 利用可能なプラグイン一覧
+python Tc_bench.py plugin install diffusion   # plugins/ にダウンロード
+python Tc_bench.py plugin remove diffusion    # 削除
+python Tc_bench.py --no-plugins               # プラグインを実行せずベンチ
+```
+
+- `plugins/*.py` を起動時に自動検出し、`available()`（依存が揃っているか）と `should_run(info)`（実行条件）が真のときだけ実行します。
+- 返ってきたスコアは `score/*.json` の `scores` にマージされます（例: `gpu_diffusion`）。
+- 追加依存（onnxruntime / torch など）はプラグイン側の責務で、無ければ自動でスキップします。
+- 例: `diffusion` プラグインは **VRAM 総量 4GB 以上 & 空き 2GB 以上**の GPU でのみ動作（現状は実測ロジック準備中のスタブ）。
+
 ## スコアの共有
 
 `score/` フォルダ内の JSON ファイルをそのまま他の人に渡せば、結果を共有・比較できます。
