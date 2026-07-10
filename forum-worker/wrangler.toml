@@ -8,3 +8,12 @@ compatibility_date = "2026-06-01"
 [[kv_namespaces]]
 binding = "FORUM"
 id = "36f88a18d11a49c2b3fc9f89a0a1c14a"
+
+# ベンチ広場 (WebSocket部屋) 用 Durable Object
+[[durable_objects.bindings]]
+name = "PLAZA"
+class_name = "PlazaRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PlazaRoom"]

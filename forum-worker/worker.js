@@ -62,6 +62,12 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
+    // ---- ベンチ広場 (WebSocket / Durable Object) -----------------------------
+    if (url.pathname === "/api/plaza/ws") {
+      const id = env.PLAZA.idFromName("main");
+      return env.PLAZA.get(id).fetch(request);
+    }
+
     // ---- GET /api/threads --------------------------------------------------
     if (request.method === "GET" && url.pathname === "/api/threads") {
       const list = await Promise.all(
@@ -125,3 +131,105 @@ export default {
     return json({ error: "not found" }, 404, origin);
   },
 };
+
+/**
+ * ベンチ広場: 2D空間の位置・チャット・共有動画をWebSocketで同期する部屋。
+ * 公開の1部屋のみ (DM・非公開ルームは作らないこと → forum-worker/README.md 参照)
+ */
+const PLAZA_MAX_SESSIONS = 40;
+const PLAZA_WORLD = { w: 960, h: 540 };
+
+export class PlazaRoom {
+  constructor(state, env) {
+    this.state = state;
+    this.sessions = new Map();   // id -> {ws, name, color, x, y}
+    this.video = null;           // {vid, by, ts}
+  }
+
+  broadcast(obj, exceptId) {
+    const msg = JSON.stringify(obj);
+    for (const [id, s] of this.sessions) {
+      if (id === exceptId) continue;
+      try { s.ws.send(msg); } catch (e) { /* closed */ }
+    }
+  }
+
+  playerList() {
+    const out = [];
+    for (const [id, s] of this.sessions) {
+      out.push({ id: id, name: s.name, color: s.color, x: s.x, y: s.y });
+    }
+    return out;
+  }
+
+  async fetch(request) {
+    if (request.headers.get("Upgrade") !== "websocket") {
+      return new Response("expected websocket", { status: 426 });
+    }
+    if (this.sessions.size >= PLAZA_MAX_SESSIONS) {
+      return new Response("room full", { status: 503 });
+    }
+    const pair = new WebSocketPair();
+    const client = pair[0];
+    const server = pair[1];
+    this.handleSession(server);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  handleSession(ws) {
+    ws.accept();
+    const id = crypto.randomUUID().slice(0, 8);
+    const sess = {
+      ws: ws,
+      name: "名無しさん",
+      color: "#32b478",
+      x: 100 + Math.random() * (PLAZA_WORLD.w - 200),
+      y: 310 + Math.random() * (PLAZA_WORLD.h - 360),   // ステージ(上部)の下側にスポーン
+
+      lastChat: 0,
+    };
+    this.sessions.set(id, sess);
+
+    ws.send(JSON.stringify({ t: "init", id: id, players: this.playerList(), video: this.video, world: PLAZA_WORLD }));
+
+    ws.addEventListener("message", (e) => {
+      let m;
+      try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (m.t === "join") {
+        sess.name = sanitize(m.name, 20) || "名無しさん";
+        sess.color = /^#[0-9a-fA-F]{6}$/.test(m.color || "") ? m.color : "#32b478";
+        this.broadcast({ t: "join", p: { id: id, name: sess.name, color: sess.color, x: sess.x, y: sess.y } }, id);
+      } else if (m.t === "move") {
+        const x = Number(m.x), y = Number(m.y);
+        if (!isFinite(x) || !isFinite(y)) return;
+        sess.x = Math.max(0, Math.min(PLAZA_WORLD.w, x));
+        sess.y = Math.max(0, Math.min(PLAZA_WORLD.h, y));
+        this.broadcast({ t: "move", id: id, x: sess.x, y: sess.y }, id);
+      } else if (m.t === "chat") {
+        const now = Date.now();
+        if (now - sess.lastChat < 1000) return;          // 1秒に1回まで
+        sess.lastChat = now;
+        const text = sanitize(m.text, 200);
+        if (!text) return;
+        this.broadcast({ t: "chat", id: id, name: sess.name, text: text });
+      } else if (m.t === "video") {
+        const vid = String(m.vid || "").trim();
+        if (vid === "") {                                   // 空文字で消灯
+          this.video = null;
+          this.broadcast({ t: "video", vid: null, by: sess.name });
+          return;
+        }
+        if (!/^[A-Za-z0-9_-]{6,15}$/.test(vid)) return;
+        this.video = { vid: vid, by: sess.name, ts: Date.now() };
+        this.broadcast({ t: "video", vid: vid, by: sess.name });
+      }
+    });
+
+    const close = () => {
+      this.sessions.delete(id);
+      this.broadcast({ t: "leave", id: id });
+    };
+    ws.addEventListener("close", close);
+    ws.addEventListener("error", close);
+  }
+}

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ベンチ広場 — TC Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+JP:wght@300;500;700;900&family=Outfit:wght@200;400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff; --ink:#07120c;
+    --green:#32b478; --green-deep:#1f7f52; --green-dark:#0d3a26; --green-soft:#e7f7ef;
+    --glow:rgba(50,180,120,.40); --line:rgba(50,180,120,.22);
+    --dim:#5d6f66; --pink:#e0247e;
+    --ui:"Outfit","Noto Sans JP",system-ui,sans-serif;
+    --mono:"Courier Prime",ui-monospace,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;color:var(--ink);font-family:var(--ui);line-height:1.6;
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(720px 460px at 50% -10%, rgba(50,180,120,.10), transparent 60%),
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:auto,54px 54px,54px 54px;background-attachment:fixed;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0 16px}
+  h1{margin:0;font-size:clamp(22px,4vw,34px);font-weight:900;letter-spacing:-.5px}
+  h1 .green{color:var(--green)}
+  a.back{color:var(--green-deep);font-weight:700;text-decoration:none;border:1px solid var(--line);padding:7px 14px;background:#fff}
+  a.back:hover{background:var(--green-soft)}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px}
+  @media(max-width:960px){.cols{grid-template-columns:1fr}}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 18px 40px -28px var(--glow)}
+  .panel h2{margin:0 0 10px;font-size:12px;letter-spacing:2px;color:var(--green-deep);text-transform:uppercase;font-weight:700;
+    display:flex;align-items:center;gap:8px}
+  .panel h2::before{content:"";width:9px;height:9px;background:var(--green);box-shadow:0 0 10px var(--glow)}
+  canvas{display:block;width:100%;height:auto;background:#f4fbf7;border:1px solid var(--line);cursor:crosshair;touch-action:none}
+  input[type=text]{background:#fff;color:var(--ink);border:1px solid var(--line);padding:8px 12px;font-family:var(--ui);font-size:13px}
+  input[type=text]:focus{outline:2px solid var(--green);outline-offset:1px}
+  input[type=color]{width:42px;height:36px;border:1px solid var(--line);background:#fff;padding:2px;cursor:pointer}
+  button{background:var(--green);color:#fff;border:1px solid var(--green);padding:8px 16px;font-weight:700;font-family:var(--ui);
+    font-size:13px;cursor:pointer;border-radius:0;transition:.2s}
+  button:hover{background:var(--green-deep)}
+  button.ghost{background:#fff;color:var(--green-deep)}
+  button.ghost:hover{background:var(--green-soft)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--dim);font-size:12px}
+  #ytbox{position:relative;width:100%;aspect-ratio:16/9;background:var(--green-dark);border:1px solid var(--line)}
+  #ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #ytbox .empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bfe9d4;font-size:13px;font-family:var(--mono)}
+  #chatlog{height:200px;overflow:auto;border:1px solid var(--line);background:#fbfefc;padding:8px 10px;font-size:13px}
+  #chatlog .n{color:var(--green-deep);font-weight:700}
+  #chatlog .sys{color:var(--dim);font-size:11.5px;font-family:var(--mono)}
+  .pill{display:inline-flex;gap:5px;padding:3px 10px;border:1px solid var(--line);font-size:11.5px;color:var(--dim);font-family:var(--mono);background:#fff}
+  .ok{color:var(--green-deep)} .ng{color:var(--pink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏞 ベンチ<span class="green">広場</span> <span class="muted" style="font-size:13px;font-weight:400">みんなで集まって動画を見る場所</span></h1>
+    <div class="row">
+      <span class="pill" id="status">接続中…</span>
+      <span class="pill" id="pcount">👥 -</span>
+      <a class="back" href="./index.html">← スコアボードへ</a>
+    </div>
+  </header>
+
+  <div class="panel" id="joinpanel" style="margin-bottom:14px">
+    <h2>入場</h2>
+    <div class="row">
+      <input type="text" id="jname" placeholder="名前 (省略可)" maxlength="20" style="max-width:200px">
+      <input type="color" id="jcolor" value="#32b478" title="アバターの色">
+      <button id="jbtn">🚪 広場に入る</button>
+      <span class="muted">移動: WASD / 矢印キー / クリック(タップ)　チャット: 下の入力欄</span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>広場</h2>
+      <div id="world" style="position:relative">
+        <canvas id="cv" width="960" height="540"></canvas>
+        <!-- ステージ上のスクリーン (canvas座標 30%,6.7% / 40%x40% に重ねる) -->
+        <div id="stagevid" style="position:absolute;left:30%;top:6.667%;width:40%;height:40%;background:#0d3a26;border:2px solid #1f7f52;box-shadow:0 8px 24px -8px rgba(13,58,38,.6)">
+          <div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bfe9d4;font-size:12px;font-family:var(--mono);text-align:center;padding:8px">まだ動画がありません<br>右のパネルから共有できます</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="chatin" placeholder="チャット… (Enterで送信 / 最大200文字)" maxlength="200" style="flex:1;min-width:180px" disabled>
+        <button id="chatbtn" disabled>送信</button>
+      </div>
+      <p class="muted" style="margin:8px 0 0">
+        公開の広場です（DM機能なし・非営利運営）。誹謗中傷・個人情報・法令違反の発言は禁止。荒れる場合は予告なく制限します。
+      </p>
+    </div>
+
+    <div>
+      <div class="panel" style="margin-bottom:14px">
+        <h2>ステージの動画を変える</h2>
+        <div class="row">
+          <input type="text" id="ytin" placeholder="YouTubeのURL または 動画ID" style="flex:1;min-width:140px" disabled>
+          <button id="ytbtn" class="ghost" disabled>📺 みんなに共有</button>
+        </div>
+        <p class="muted" style="margin:8px 0 0" id="ytby">共有すると広場のステージ画面が全員分切り替わります。</p>
+      </div>
+      <div class="panel">
+        <h2>チャットログ</h2>
+        <div id="chatlog"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WS_URL = "wss://tcbench-forum.sanyokai05.workers.dev/api/plaza/ws";
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+const W = 960, H = 540;
+const SPEED = 170;            // px/sec
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let ws = null, myId = null, joined = false;
+let players = {};             // id -> {name,color,x,y,tx,ty,bubble,bubbleUntil}
+let keys = {};
+let lastSend = 0;
+
+// ---- ドット絵アバター (10x12) : 1=体色 2=暗い体色 3=白(目) ------------------
+const SPRITE = [
+  "0001111000",
+  "0011111100",
+  "0011111100",
+  "0013113100",
+  "0011111100",
+  "0001111000",
+  "0011111100",
+  "0111111110",
+  "0111111110",
+  "0011001100",
+  "0011001100",
+  "0022002200",
+];
+const PX = 3;   // 1ドットの描画サイズ
+
+function shade(hex, f){
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n>>16)&255)*f), g = Math.round(((n>>8)&255)*f), b = Math.round((n&255)*f);
+  return "rgb(" + r + "," + g + "," + b + ")";
+}
+
+function drawAvatar(p, isMe){
+  const w = SPRITE[0].length * PX, h = SPRITE.length * PX;
+  const ox = p.x - w/2, oy = p.y - h;
+  for (let r = 0; r < SPRITE.length; r++){
+    for (let c = 0; c < SPRITE[r].length; c++){
+      const ch = SPRITE[r][c];
+      if (ch === "0") continue;
+      ctx.fillStyle = ch === "3" ? "#ffffff" : ch === "2" ? shade(p.color, .55) : p.color;
+      ctx.fillRect(ox + c*PX, oy + r*PX, PX, PX);
+    }
+  }
+  // 名前
+  ctx.font = "700 11px 'Noto Sans JP', sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillStyle = isMe ? "#e0247e" : "#1f7f52";
+  ctx.fillText(p.name, p.x, oy - 6);
+  // 吹き出し
+  if (p.bubble && Date.now() < p.bubbleUntil){
+    ctx.font = "12px 'Noto Sans JP', sans-serif";
+    const tw = Math.min(ctx.measureText(p.bubble).width, 220);
+    const bx = p.x - tw/2 - 8, by = oy - 40;
+    ctx.fillStyle = "rgba(255,255,255,.95)";
+    ctx.strokeStyle = "rgba(50,180,120,.5)";
+    ctx.beginPath();
+    ctx.roundRect(bx, by, tw + 16, 22, 5);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#07120c";
+    ctx.save();
+    ctx.beginPath(); ctx.rect(bx + 8, by, tw, 22); ctx.clip();
+    ctx.fillText(p.bubble, p.x, by + 15);
+    ctx.restore();
+  }
+}
+
+function drawWorld(){
+  ctx.clearRect(0, 0, W, H);
+  // 地面グリッド
+  ctx.strokeStyle = "rgba(50,180,120,.12)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= W; x += 48){ ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += 48){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  // ステージ (スクリーンは #stagevid のiframeがこの上に重なる)
+  // スクリーン枠: x 288-672, y 36-252 → その下に舞台
+  ctx.fillStyle = "#123f2c";
+  ctx.fillRect(276, 24, 408, 240);            // スクリーンの外枠
+  ctx.fillStyle = "#8a5a2b";
+  ctx.fillRect(240, 252, 480, 26);            // 舞台の床
+  ctx.fillStyle = "#6e4520";
+  ctx.fillRect(240, 278, 480, 8);             // 舞台のふち
+  ctx.fillStyle = "rgba(50,180,120,.10)";     // スクリーンの光
+  ctx.beginPath();
+  ctx.moveTo(300, 264); ctx.lineTo(660, 264); ctx.lineTo(760, 420); ctx.lineTo(200, 420);
+  ctx.closePath(); ctx.fill();
+  // ベンチ (観客席)
+  ctx.fillStyle = "#8a5a2b";
+  [[150, 460], [450, 480], [750, 460], [80, 340], [820, 340]].forEach(function(b){
+    ctx.fillRect(b[0], b[1], 60, 8); ctx.fillRect(b[0]+6, b[1]+8, 6, 14); ctx.fillRect(b[0]+48, b[1]+8, 6, 14);
+  });
+  // プレイヤー (y順で奥から)
+  const list = Object.keys(players).map(function(id){ return [id, players[id]]; });
+  list.sort(function(a, b){ return a[1].y - b[1].y; });
+  list.forEach(function(e){ drawAvatar(e[1], e[0] === myId); });
+}
+
+let lastT = performance.now();
+function tick(now){
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  const me = players[myId];
+  if (me && joined){
+    let dx = 0, dy = 0;
+    if (keys.ArrowLeft || keys.a) dx -= 1;
+    if (keys.ArrowRight || keys.d) dx += 1;
+    if (keys.ArrowUp || keys.w) dy -= 1;
+    if (keys.ArrowDown || keys.s) dy += 1;
+    if (dx || dy){
+      const l = Math.hypot(dx, dy);
+      me.x = Math.max(16, Math.min(W - 16, me.x + dx/l * SPEED * dt));
+      me.y = Math.max(300, Math.min(H - 4, me.y + dy/l * SPEED * dt));   // ステージ(上部)には登れない
+      me.tx = me.ty = null;
+    } else if (me.tx != null){
+      const vx = me.tx - me.x, vy = me.ty - me.y, d = Math.hypot(vx, vy);
+      if (d < 4){ me.tx = me.ty = null; }
+      else { me.x += vx/d * SPEED * dt; me.y += vy/d * SPEED * dt; }
+    }
+    if (Date.now() - lastSend > 100){
+      lastSend = Date.now();
+      send({ t: "move", x: me.x, y: me.y });
+    }
+  }
+  // 他プレイヤーは目標へ補間
+  Object.keys(players).forEach(function(id){
+    if (id === myId) return;
+    const p = players[id];
+    if (p.gx != null){
+      p.x += (p.gx - p.x) * Math.min(1, dt * 12);
+      p.y += (p.gy - p.y) * Math.min(1, dt * 12);
+    }
+  });
+  drawWorld();
+  requestAnimationFrame(tick);
+}
+
+function send(obj){ if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+function setStatus(text, ok){
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "pill " + (ok ? "ok" : "ng");
+}
+function logLine(html){
+  const log = document.getElementById("chatlog");
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+function updateCount(){
+  document.getElementById("pcount").textContent = "👥 " + Object.keys(players).length;
+}
+function parseVid(input){
+  input = input.trim();
+  let m = input.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{6,15})/);
+  if (m) return m[1];
+  if (/^[A-Za-z0-9_-]{6,15}$/.test(input)) return input;
+  return null;
+}
+function setVideo(vid, by){
+  const box = document.getElementById("stagevid");
+  if (!vid){
+    box.innerHTML = '<div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bfe9d4;font-size:12px;font-family:var(--mono);text-align:center;padding:8px">まだ動画がありません<br>右のパネルから共有できます</div>';
+    document.getElementById("ytby").textContent = by ? ("📺 " + by + " さんが画面を消しました") : "";
+    return;
+  }
+  box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + vid + '" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+  document.getElementById("ytby").textContent = by ? ("📺 " + by + " さんが動画を変更しました (再生は各自で押してね)") : "";
+}
+
+function connect(){
+  ws = new WebSocket(WS_URL);
+  ws.onopen = function(){ setStatus("接続OK", true); };
+  ws.onclose = function(){
+    setStatus("切断 — 5秒後に再接続", false);
+    players = {}; updateCount();
+    setTimeout(connect, 5000);
+  };
+  ws.onmessage = function(e){
+    let m;
+    try { m = JSON.parse(e.data); } catch (err) { return; }
+    if (m.t === "init"){
+      myId = m.id;
+      players = {};
+      (m.players || []).forEach(function(p){ players[p.id] = p; });
+      if (!players[myId]) players[myId] = { name: "名無しさん", color: "#32b478", x: W/2, y: H/2 };
+      if (m.video && m.video.vid) setVideo(m.video.vid, m.video.by);
+      if (joined) send({ t: "join", name: myName(), color: myColor() });
+      updateCount();
+    } else if (m.t === "join"){
+      players[m.p.id] = m.p;
+      logLine('<span class="sys">→ ' + esc(m.p.name) + ' さんが入場</span>');
+      updateCount();
+    } else if (m.t === "move"){
+      const p = players[m.id];
+      if (p){ p.gx = m.x; p.gy = m.y; }
+      else players[m.id] = { name: "?", color: "#999999", x: m.x, y: m.y };
+    } else if (m.t === "chat"){
+      const p = players[m.id];
+      if (p){ p.name = m.name; p.bubble = m.text; p.bubbleUntil = Date.now() + 6000; }
+      logLine('<span class="n">' + esc(m.name) + '</span>: ' + esc(m.text));
+    } else if (m.t === "video"){
+      setVideo(m.vid, m.by);
+      logLine('<span class="sys">📺 ' + esc(m.by) + ' さんが動画を変更</span>');
+    } else if (m.t === "leave"){
+      if (players[m.id]) logLine('<span class="sys">← ' + esc(players[m.id].name) + ' さんが退場</span>');
+      delete players[m.id];
+      updateCount();
+    }
+  };
+}
+
+function myName(){ return document.getElementById("jname").value.trim() || "名無しさん"; }
+function myColor(){ return document.getElementById("jcolor").value; }
+
+document.getElementById("jbtn").onclick = function(){
+  joined = true;
+  const me = players[myId];
+  if (me){ me.name = myName(); me.color = myColor(); }
+  send({ t: "join", name: myName(), color: myColor() });
+  document.getElementById("joinpanel").style.display = "none";
+  ["chatin", "chatbtn", "ytin", "ytbtn"].forEach(function(i){ document.getElementById(i).disabled = false; });
+  logLine('<span class="sys">広場に入りました。ようこそ！</span>');
+};
+
+function sendChat(){
+  const el = document.getElementById("chatin");
+  const text = el.value.trim();
+  if (!text) return;
+  el.value = "";
+  send({ t: "chat", text: text });
+  const me = players[myId];
+  if (me){ me.bubble = text; me.bubbleUntil = Date.now() + 6000; }
+  logLine('<span class="n">' + esc(myName()) + '</span>: ' + esc(text));
+}
+document.getElementById("chatbtn").onclick = sendChat;
+document.getElementById("chatin").addEventListener("keydown", function(e){ if (e.key === "Enter") sendChat(); });
+
+document.getElementById("ytbtn").onclick = function(){
+  const vid = parseVid(document.getElementById("ytin").value);
+  if (!vid){ alert("YouTubeのURLか動画IDを入れてください"); return; }
+  document.getElementById("ytin").value = "";
+  send({ t: "video", vid: vid });
+  setVideo(vid, myName());
+};
+
+window.addEventListener("keydown", function(e){
+  if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  keys[e.key] = true;
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.key) >= 0) e.preventDefault();
+});
+window.addEventListener("keyup", function(e){ keys[e.key] = false; });
+
+cv.addEventListener("pointerdown", function(e){
+  if (!joined) return;
+  const r = cv.getBoundingClientRect();
+  const me = players[myId];
+  if (!me) return;
+  me.tx = Math.max(16, Math.min(W - 16, (e.clientX - r.left) * (W / r.width)));
+  me.ty = Math.max(300, Math.min(H - 4, (e.clientY - r.top) * (H / r.height)));
+});
+
+connect();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
