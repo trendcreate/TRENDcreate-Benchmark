@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-29T22:31:15+00:00",
+  "generated": "2026-07-10T03:58:00+00:00",
   "count": 12,
   "entries": [
     {
@@ -15,6 +15,7 @@
       "single": 2250.0,
       "multi": 8867.8,
       "gpu_vcalc": 7943.9,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-28T04:06:13+00:00"
     },
@@ -31,6 +32,7 @@
       "single": 1553.2,
       "multi": 5259.7,
       "gpu_vcalc": 53.0,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-27T08:54:12+00:00"
     },
@@ -47,6 +49,7 @@
       "single": 967.4,
       "multi": 4386.1,
       "gpu_vcalc": null,
+      "gpu_diffusion": null,
       "runs": 2,
       "last": "2026-06-27T15:11:21+09:00"
     },
@@ -63,6 +66,7 @@
       "single": 5252.0,
       "multi": 45601.0,
       "gpu_vcalc": 6223.2,
+      "gpu_diffusion": null,
       "runs": 3,
       "last": "2026-06-27T16:44:21+09:00"
     },
@@ -79,6 +83,7 @@
       "single": 8281.5,
       "multi": 69424.3,
       "gpu_vcalc": 15247.6,
+      "gpu_diffusion": null,
       "runs": 2,
       "last": "2026-06-27T07:24:27+00:00"
     },
@@ -95,6 +100,7 @@
       "single": 7921.1,
       "multi": 67127.0,
       "gpu_vcalc": 9529.8,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-29T22:31:15+00:00"
     },
@@ -111,6 +117,7 @@
       "single": 484.4,
       "multi": 653.1,
       "gpu_vcalc": null,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-28T00:14:05+09:00"
     },
@@ -127,6 +134,7 @@
       "single": 615.5,
       "multi": 2080.0,
       "gpu_vcalc": null,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-27T15:00:25+09:00"
     },
@@ -143,6 +151,7 @@
       "single": 10554.6,
       "multi": 106276.9,
       "gpu_vcalc": 9529.8,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-27T07:25:12+00:00"
     },
@@ -159,6 +168,7 @@
       "single": 1523.8,
       "multi": 4108.0,
       "gpu_vcalc": 540.5,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-27T23:27:12+00:00"
     },
@@ -175,6 +185,7 @@
       "single": 807.3,
       "multi": 11732.5,
       "gpu_vcalc": 7943.9,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-29T22:24:41+00:00"
     },
@@ -191,6 +202,7 @@
       "single": 4259.3,
       "multi": 75743.8,
       "gpu_vcalc": null,
+      "gpu_diffusion": null,
       "runs": 1,
       "last": "2026-06-27T06:49:21+00:00"
     }

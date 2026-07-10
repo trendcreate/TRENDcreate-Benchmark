@@ -3,8 +3,8 @@
     {
       "name": "diffusion",
       "file": "diffusion.py",
-      "description": "画像生成(Stable Diffusion)推論ベンチ [VRAM 4GB以上 & 空き2GB以上で実行]",
-      "requires": "onnxruntime-directml / onnxruntime-gpu もしくは torch + diffusers"
+      "description": "画像生成(Stable Diffusion)推論ベンチ [VRAM 4GB以上 & 空き2GB以上で実行 / モデルDL不要]",
+      "requires": "PyTorch (CUDA/ROCm 版)"
     }
   ]
 }

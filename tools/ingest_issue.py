@@ -53,6 +53,7 @@ def normalize(d):
         "cpu_single": num_or_none(best.get("cpu_single")),
         "cpu_multi":  num_or_none(best.get("cpu_multi")),
         "gpu_vcalc":  num_or_none(best.get("gpu_vcalc")),
+        "gpu_diffusion": num_or_none(best.get("gpu_diffusion")),
         "multi_ratio": num_or_none(best.get("multi_ratio")),
     }
     if rec_best["cpu_single"] is None and rec_best["cpu_multi"] is None:

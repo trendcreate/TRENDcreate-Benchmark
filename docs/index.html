@@ -307,9 +307,10 @@ py Tc_bench.py</code></pre>
       回した<b>実測時間</b>から算出するため、オーバークロック等の成果はそのまま反映されます。
       GPU は計測負荷をかけず、スペック値から算出する「ロマン枠（V-Calc）」です。
     </p>
-    <pre><code>CPU Single = 10000 / シングル実行秒数
-CPU Multi  = 10000 × 論理スレッド数 / マルチ実行秒数
-GPU V-Calc = 最大クロック(MHz) × (VRAM_GB ^ 1.5) / 10   ※クロック不明時は公称 1500MHz</code></pre>
+    <pre><code>CPU Single    = 10000 / シングル実行秒数
+CPU Multi     = 10000 × 論理スレッド数 / マルチ実行秒数
+GPU V-Calc    = 最大クロック(MHz) × (VRAM_GB ^ 1.5) / 10   ※クロック不明時は公称 1500MHz
+GPU Diffusion = デノイズ steps/sec × 100   ※plugin (要 PyTorch GPU版 / VRAM 4GB+空き2GB)</code></pre>
     <ul style="font-size:13px;color:var(--fg)" data-i18n-html="calc_list">
       <li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li>
       <li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li>
@@ -371,7 +372,7 @@ const L = {
     pr_note:"※ Issue 送信で投稿された JSON は、メンテナがボードへ取り込みます。",
     calc_h:"算出方法について",
     calc_desc:'スコアは他マシンと相対比較するための<b>独自指標</b>です。CPU は実際に重い計算（素数判定＋浮動小数点演算）を回した<b>実測時間</b>から算出するため、オーバークロック等の成果はそのまま反映されます。GPU は計測負荷をかけず、スペック値から算出する「ロマン枠（V-Calc）」です。',
-    calc_list:"<li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li><li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li><li><b>GPU V-Calc</b> … VRAM 容量を重視した仮想スコア（NVIDIA / AMD 対応、未検出ならスキップ）</li>",
+    calc_list:"<li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li><li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li><li><b>GPU V-Calc</b> … VRAM 容量を重視した仮想スコア（NVIDIA / AMD 対応、未検出ならスキップ）</li><li><b>GPU Diffusion</b> … Stable Diffusion の UNet デノイズ相当負荷の<b>実測</b>スコア（プラグイン導入時のみ / モデルDL不要）</li>",
     calc_idle:"計測はアイドル状態を推奨。電源/温度による周波数制御や同時実行プロセスでスコアは変動します。",
     forge_h:"⚠️ 偽造JSONの投稿について",
     forge_desc:'公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を <code>[score]</code> Issue で投稿しないでください。<br>「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、専用フォーラム（GitHub Discussions）で歓迎です👇',
@@ -402,7 +403,7 @@ const L = {
     pr_note:"* JSON submitted via Issue is ingested into the board by a maintainer.",
     calc_h:"About the scoring",
     calc_desc:'Scores are an <b>original index</b> for relative comparison. The CPU score is derived from the <b>measured time</b> of real heavy work (prime testing + floating-point math), so overclocking is reflected directly. The GPU score is a "for-fun" value (V-Calc) computed from spec values, with no GPU load.',
-    calc_list:"<li><b>CPU Single</b> … measured single-core performance (faster = higher)</li><li><b>CPU Multi</b> … measured performance using all logical threads</li><li><b>GPU V-Calc</b> … VRAM-weighted virtual score (NVIDIA / AMD; skipped if none detected)</li>",
+    calc_list:"<li><b>CPU Single</b> … measured single-core performance (faster = higher)</li><li><b>CPU Multi</b> … measured performance using all logical threads</li><li><b>GPU V-Calc</b> … VRAM-weighted virtual score (NVIDIA / AMD; skipped if none detected)</li><li><b>GPU Diffusion</b> … <b>measured</b> Stable-Diffusion-like UNet denoise workload (plugin only / no model download)</li>",
     calc_idle:"Measure while idle. Scores vary with power/thermal frequency scaling and other running processes.",
     forge_h:"⚠️ About forged JSON",
     forge_desc:'Submit <b>only real measured scores</b> to the official ranking. Do not post tampered/forged JSON via <code>[score]</code> Issues.<br>Fantasy / joke specs (e.g. "my ultimate dream rig") are welcome in the dedicated forum (GitHub Discussions) 👇',
@@ -435,6 +436,7 @@ const SORTS = {
   ],
   gpu: [
     {key:"gpu_vcalc", label:"V-Calc"},
+    {key:"gpu_diffusion", label:"Diffusion"},
     {key:"vram_mb",   label:"VRAM"},
   ],
 };
@@ -458,7 +460,7 @@ function buildSortBar(){
 function render(){
   let rows = DATA.entries.slice();
   if(mine) rows.push(Object.assign({__me:true}, mine));
-  if(tab==="gpu") rows = rows.filter(r => r.gpu && (r.gpu_vcalc!=null || r.vram_mb));
+  if(tab==="gpu") rows = rows.filter(r => r.gpu && (r.gpu_vcalc!=null || r.gpu_diffusion!=null || r.vram_mb));
   const f = filterText.trim().toLowerCase();
   if(f) rows = rows.filter(r => (r.cpu||"").toLowerCase().includes(f) || (r.gpu||"").toLowerCase().includes(f));
   rows.sort((a,b)=>{
@@ -480,7 +482,7 @@ function render(){
       <th>Single</th><th>Multi</th><th>Runs</th>`;
   } else {
     thead.innerHTML = `<th>#</th><th class="l">GPU</th><th class="l">CPU</th>
-      <th>VRAM</th><th class="l">Performance</th><th>GPU&nbsp;V-Calc</th><th>Runs</th>`;
+      <th>VRAM</th><th class="l">Performance</th><th>GPU&nbsp;V-Calc</th><th>Diffusion</th><th>Runs</th>`;
   }
 
   const tb = document.querySelector("#board tbody"); tb.innerHTML="";
@@ -511,6 +513,7 @@ function render(){
         <td class="${lead('vram_mb')}">${fmtVram(r.vram_mb)}</td>
         ${bar(r)}
         <td class="vnum">${fmt(r.gpu_vcalc)}</td>
+        <td class="${lead('gpu_diffusion')}">${fmt(r.gpu_diffusion)}</td>
         <td class="muted">${r.runs??1}</td>`;
     }
     tb.appendChild(tr);
@@ -531,7 +534,8 @@ function parseMine(text){
     cores: si.cores_per_socket ?? null, threads: si.logical_processors ?? null,
     cpu_mhz: si.cpu_mhz ?? null, vram_mb: si.gpu_vram_mb ?? null,
     single: best.cpu_single ?? null, multi: best.cpu_multi ?? null,
-    gpu_vcalc: best.gpu_vcalc ?? null, runs: runs.length||1,
+    gpu_vcalc: best.gpu_vcalc ?? null, gpu_diffusion: best.gpu_diffusion ?? null,
+    runs: runs.length||1,
   };
 }
 
@@ -551,7 +555,8 @@ buildSortBar();
 
 // ===== 散布図 =====
 const AXES = {single:"CPU Single", multi:"CPU Multi", coresN:"Cores",
-              threads:"Threads", cpu_mhz:"CPU Clock (MHz)", gpu_vcalc:"GPU V-Calc", vram_mb:"VRAM (MB)"};
+              threads:"Threads", cpu_mhz:"CPU Clock (MHz)", gpu_vcalc:"GPU V-Calc",
+              gpu_diffusion:"GPU Diffusion", vram_mb:"VRAM (MB)"};
 let axX="single", axY="multi";
 
 function vColor(r){

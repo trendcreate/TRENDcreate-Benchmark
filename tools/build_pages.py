@@ -47,6 +47,7 @@ def collect_entries(score_dir=SCORE_DIR):
             "single": best.get("cpu_single"),
             "multi": best.get("cpu_multi"),
             "gpu_vcalc": best.get("gpu_vcalc"),
+            "gpu_diffusion": best.get("gpu_diffusion"),
             "runs": len(runs),
             "last": last_ts,
         })
