@@ -378,10 +378,19 @@ document.getElementById("unmutebtn").onclick = function(){
   document.getElementById("unmutebtn").hidden = true;
 };
 
+let heartbeatTimer = null;
+let intentionalClose = false;   // ページ離脱等で自分から切った場合は再接続しない
+
 function connect(){
   ws = new WebSocket(WS_URL);
-  ws.onopen = function(){ setStatus("接続OK", true); };
+  ws.onopen = function(){
+    setStatus("接続OK", true);
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(function(){ send({ t: "ping" }); }, 15000);
+  };
   ws.onclose = function(){
+    clearInterval(heartbeatTimer);
+    if (intentionalClose) return;
     setStatus("切断 — 5秒後に再接続", false);
     players = {}; updateCount();
     setTimeout(connect, 5000);
@@ -507,6 +516,15 @@ cv.addEventListener("pointerdown", function(e){
   if (!me) return;
   me.tx = Math.max(16, Math.min(W - 16, (e.clientX - r.left) * (W / r.width)));
   me.ty = Math.max(300, Math.min(H - 4, (e.clientY - r.top) * (H / r.height)));
+});
+
+// ブラウザバック・タブを閉じる等でページを離れる際は、再接続を試みずに
+// WebSocketを明示的に閉じて即座に退出扱いにする(サーバー側のハートビート
+// 掃除は保険であり、これが主経路)。
+window.addEventListener("pagehide", function(){
+  intentionalClose = true;
+  clearInterval(heartbeatTimer);
+  if (ws) { try { ws.close(1000, "pagehide"); } catch (e) {} }
 });
 
 connect();

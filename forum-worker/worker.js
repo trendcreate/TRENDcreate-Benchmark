@@ -138,11 +138,14 @@ export default {
  */
 const PLAZA_MAX_SESSIONS = 40;
 const PLAZA_WORLD = { w: 960, h: 540 };
+const PLAZA_HEARTBEAT_MS = 15000;   // クライアントが ping を送る間隔の目安
+const PLAZA_STALE_MS = 40000;       // これより ping が来なければ切断とみなす
+const PLAZA_SWEEP_MS = 15000;       // 掃除アラームの間隔
 
 export class PlazaRoom {
   constructor(state, env) {
     this.state = state;
-    this.sessions = new Map();   // id -> {ws, name, color, x, y}
+    this.sessions = new Map();   // id -> {ws, name, color, x, y, lastSeen}
     this.video = null;           // {vid, by, ts}
     this.playback = null;        // {state: "playing"|"paused", pos: 秒, wallTs: ms}
   }
@@ -186,10 +189,11 @@ export class PlazaRoom {
       color: "#32b478",
       x: 100 + Math.random() * (PLAZA_WORLD.w - 200),
       y: 310 + Math.random() * (PLAZA_WORLD.h - 360),   // ステージ(上部)の下側にスポーン
-
       lastChat: 0,
+      lastSeen: Date.now(),
     };
     this.sessions.set(id, sess);
+    this.ensureSweepAlarm();
 
     ws.send(JSON.stringify({
       t: "init", id: id, players: this.playerList(),
@@ -197,6 +201,7 @@ export class PlazaRoom {
     }));
 
     ws.addEventListener("message", (e) => {
+      sess.lastSeen = Date.now();
       let m;
       try { m = JSON.parse(e.data); } catch (err) { return; }
       if (m.t === "join") {
@@ -215,7 +220,9 @@ export class PlazaRoom {
         sess.lastChat = now;
         const text = sanitize(m.text, 200);
         if (!text) return;
-        this.broadcast({ t: "chat", id: id, name: sess.name, text: text });
+        this.broadcast({ t: "chat", id: id, name: sess.name, text: text }, id);   // 送信者本人には返さない(二重表示防止)
+      } else if (m.t === "ping") {
+        // ハートビート。lastSeen 更新のみで応答不要。
       } else if (m.t === "video") {
         const vid = String(m.vid || "").trim();
         if (vid === "") {                                   // 空文字で消灯
@@ -241,10 +248,33 @@ export class PlazaRoom {
     });
 
     const close = () => {
+      if (!this.sessions.has(id)) return;   // 既に掃除済みなら二重leaveを防ぐ
       this.sessions.delete(id);
       this.broadcast({ t: "leave", id: id });
     };
     ws.addEventListener("close", close);
     ws.addEventListener("error", close);
+  }
+
+  // 定期的に生存確認(ping)が途絶えたセッションを掃除する。
+  // WebSocketの close/error イベントは、ブラウザバック・通信断・端末スリープ・
+  // 強制終了などで発火しないことがあるため、その保険として動かす。
+  ensureSweepAlarm() {
+    if (this._sweepScheduled) return;
+    this._sweepScheduled = true;
+    this.state.storage.setAlarm(Date.now() + PLAZA_SWEEP_MS).catch(() => {});
+  }
+
+  async alarm() {
+    this._sweepScheduled = false;
+    const now = Date.now();
+    for (const [id, sess] of this.sessions) {
+      if (now - sess.lastSeen > PLAZA_STALE_MS) {
+        this.sessions.delete(id);
+        try { sess.ws.close(1001, "stale"); } catch (e) { /* already closed */ }
+        this.broadcast({ t: "leave", id: id });
+      }
+    }
+    if (this.sessions.size > 0) this.ensureSweepAlarm();
   }
 }
