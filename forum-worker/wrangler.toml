@@ -7,4 +7,4 @@ compatibility_date = "2026-06-01"
 # 2) 下の id を差し替える
 [[kv_namespaces]]
 binding = "FORUM"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "36f88a18d11a49c2b3fc9f89a0a1c14a"
