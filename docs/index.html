@@ -325,12 +325,10 @@ GPU Diffusion = デノイズ steps/sec × 100   ※plugin (要 PyTorch GPU版 / 
       <p class="muted" style="font-size:13px;margin:0" data-i18n-html="forge_desc">
         公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を
         <code>[score]</code> Issue で投稿しないでください。<br>
-        「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、専用フォーラム（GitHub Discussions）で歓迎です👇
+        「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、下の<b>フォーラムの「🃏 ジョークスペック申請所」</b>で歓迎です👇
       </p>
       <div class="controls" style="margin-top:12px">
-        <a class="ghbtn" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/13" target="_blank" rel="noopener" data-i18n="forum_joke">🃏 ジョークスペック申請所</a>
-        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions/14" target="_blank" rel="noopener" data-i18n="forum_compare">📊 スペック比較・雑談</a>
-        <a class="ghbtn ghost" href="https://github.com/trendcreate/TRENDcreate-Benchmark/discussions" target="_blank" rel="noopener" data-i18n="forum_all">💬 フォーラム一覧</a>
+        <a class="ghbtn" href="#forumpanel" data-i18n="forum_goto">💬 フォーラムへ移動</a>
       </div>
     </div>
   </div>
@@ -347,7 +345,7 @@ GPU Diffusion = デノイズ steps/sec × 100   ※plugin (要 PyTorch GPU版 / 
     <textarea id="ftext" data-i18n-ph="forum_text_ph" placeholder="メッセージを入力… (最大1000文字)" maxlength="1000" style="min-height:70px"></textarea>
     <div class="controls" style="margin-top:8px">
       <button id="fsend" class="big" data-i18n="forum_send">💬 投稿する</button>
-      <span class="muted" style="font-size:11.5px" data-i18n="forum_note2">匿名投稿・約10秒に1回まで。荒らし行為はご遠慮ください。</span>
+      <span class="muted" style="font-size:11.5px" data-i18n="forum_note2">匿名投稿・約10秒に1回まで。本フォーラムは誰でも閲覧できる公開掲示板です（DM・非公開メッセージ機能はありません／非営利運営）。誹謗中傷・個人情報・法令違反の投稿は運営が予告なく削除します。削除依頼は GitHub Issue へ。</span>
     </div>
   </div>
 
@@ -395,15 +393,15 @@ const L = {
     calc_list:"<li><b>CPU Single</b> … 1コアの実測性能（速い＝高スコア）</li><li><b>CPU Multi</b> … 全論理スレッドを使った実測性能</li><li><b>GPU V-Calc</b> … VRAM 容量を重視した仮想スコア（NVIDIA / AMD 対応、未検出ならスキップ）</li><li><b>GPU Diffusion</b> … Stable Diffusion の UNet デノイズ相当負荷の<b>実測</b>スコア（プラグイン導入時のみ / モデルDL不要）</li>",
     calc_idle:"計測はアイドル状態を推奨。電源/温度による周波数制御や同時実行プロセスでスコアは変動します。",
     forge_h:"⚠️ 偽造JSONの投稿について",
-    forge_desc:'公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を <code>[score]</code> Issue で投稿しないでください。<br>「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、専用フォーラム（GitHub Discussions）で歓迎です👇',
-    forum_joke:"🃏 ジョークスペック申請所", forum_compare:"📊 スペック比較・雑談", forum_all:"💬 フォーラム一覧",
+    forge_desc:'公式ランキングには<b>実測の正規スコアのみ</b>投稿してください。改ざん・偽造した JSON を <code>[score]</code> Issue で投稿しないでください。<br>「俺の考えた最強スペック」などの<b>ネタ・架空スペック</b>は、下の<b>フォーラムの「🃏 ジョークスペック申請所」</b>で歓迎です👇',
+    forum_goto:"💬 フォーラムへ移動",
     loaded_msg:"✓ 読み込みました", parse_fail:"✗ JSONの解析に失敗: ", parse_alert:"JSONの解析に失敗しました:",
     drop_invalid:"JSONファイル (score/*.json) をドロップしてください", paste_need:"JSONを貼り付けてください",
     issue_need:"先にJSONをドロップ/貼り付けしてください", no_data:"data.json 未生成",
     issue_body_title:"TC Bench スコア投稿", issue_body_note:"以下は自動添付された score JSON です。編集不要",
     live_forum_h:"フォーラム (リアルタイム)", forum_name_ph:"名前 (省略可)",
     forum_text_ph:"メッセージを入力… (最大1000文字)", forum_send:"💬 投稿する",
-    forum_note2:"匿名投稿・約10秒に1回まで。荒らし行為はご遠慮ください。",
+    forum_note2:"匿名投稿・約10秒に1回まで。本フォーラムは誰でも閲覧できる公開掲示板です（DM・非公開メッセージ機能はありません／非営利運営）。誹謗中傷・個人情報・法令違反の投稿は運営が予告なく削除します。削除依頼は GitHub Issue へ。",
     forum_sent:"✓ 投稿しました", forum_rate:"投稿間隔が短すぎます。少し待ってください。",
     forum_err:"投稿に失敗しました: ", forum_empty:"メッセージを入力してください",
   },
@@ -431,15 +429,15 @@ const L = {
     calc_list:"<li><b>CPU Single</b> … measured single-core performance (faster = higher)</li><li><b>CPU Multi</b> … measured performance using all logical threads</li><li><b>GPU V-Calc</b> … VRAM-weighted virtual score (NVIDIA / AMD; skipped if none detected)</li><li><b>GPU Diffusion</b> … <b>measured</b> Stable-Diffusion-like UNet denoise workload (plugin only / no model download)</li>",
     calc_idle:"Measure while idle. Scores vary with power/thermal frequency scaling and other running processes.",
     forge_h:"⚠️ About forged JSON",
-    forge_desc:'Submit <b>only real measured scores</b> to the official ranking. Do not post tampered/forged JSON via <code>[score]</code> Issues.<br>Fantasy / joke specs (e.g. "my ultimate dream rig") are welcome in the dedicated forum (GitHub Discussions) 👇',
-    forum_joke:"🃏 Joke-spec submissions", forum_compare:"📊 Spec talk & comparison", forum_all:"💬 All discussions",
+    forge_desc:'Submit <b>only real measured scores</b> to the official ranking. Do not post tampered/forged JSON via <code>[score]</code> Issues.<br>Fantasy / joke specs (e.g. "my ultimate dream rig") are welcome in the <b>"🃏 Joke-spec" thread of the forum below</b> 👇',
+    forum_goto:"💬 Go to forum",
     loaded_msg:"✓ Loaded", parse_fail:"✗ JSON parse failed: ", parse_alert:"Failed to parse JSON:",
     drop_invalid:"Please drop a JSON file (score/*.json)", paste_need:"Please paste JSON",
     issue_need:"Drop or paste JSON first", no_data:"data.json not generated",
     issue_body_title:"TC Bench score submission", issue_body_note:"Auto-attached score JSON below. No need to edit.",
     live_forum_h:"Forum (live)", forum_name_ph:"Name (optional)",
     forum_text_ph:"Write a message… (max 1000 chars)", forum_send:"💬 Post",
-    forum_note2:"Anonymous posting, ~1 post / 10s. Please be nice.",
+    forum_note2:"Anonymous posting, ~1 post / 10s. This is a public board readable by anyone (no DM / private messaging; non-commercial). Abusive, defamatory or illegal posts will be removed without notice. Removal requests: GitHub Issues.",
     forum_sent:"✓ Posted", forum_rate:"Too fast — please wait a moment.",
     forum_err:"Failed to post: ", forum_empty:"Please write a message",
   },
