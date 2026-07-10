@@ -81,6 +81,21 @@
     </div>
   </div>
 
+  <div class="panel" id="sharepanel" style="margin-bottom:14px">
+    <h2>🔗 広場に誘う</h2>
+    <div class="row">
+      <input type="text" id="shareurl" readonly style="flex:1;min-width:200px;font-family:var(--mono);font-size:12.5px">
+      <button id="copybtn" class="ghost">📋 コピー</button>
+      <a id="xshare" class="ghost" target="_blank" rel="noopener"
+         style="display:inline-block;background:#fff;color:var(--green-deep);border:1px solid var(--line);padding:8px 16px;font-weight:700;font-size:13px;text-decoration:none">𝕏 で共有</a>
+      <span class="muted" id="copymsg"></span>
+    </div>
+    <div class="row" style="margin-top:10px;align-items:flex-start">
+      <div id="qrbox" style="width:120px;height:120px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center"></div>
+      <p class="muted" style="margin:0;flex:1;min-width:180px">このURLを知っている人は誰でも入場できます（合言葉やログインはありません）。QRコードはその場でスマホから読み込む用です。</p>
+    </div>
+  </div>
+
   <div class="cols">
     <div class="panel">
       <h2>広場</h2>
@@ -413,6 +428,39 @@ function connect(){
 
 function myName(){ return document.getElementById("jname").value.trim() || "名無しさん"; }
 function myColor(){ return document.getElementById("jcolor").value; }
+
+// ---- 共有カード -----------------------------------------------------------
+(function initShareCard(){
+  const url = location.href.split("#")[0].split("?")[0];
+  const urlEl = document.getElementById("shareurl");
+  urlEl.value = url;
+
+  document.getElementById("copybtn").onclick = function(){
+    const msg = document.getElementById("copymsg");
+    const done = function(){ msg.textContent = "✓ コピーしました"; setTimeout(function(){ msg.textContent = ""; }, 2500); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(done).catch(function(){ fallbackCopy(); });
+    } else {
+      fallbackCopy();
+    }
+    function fallbackCopy(){
+      urlEl.focus(); urlEl.select();
+      try { document.execCommand("copy"); done(); } catch (e) { msg.textContent = "コピーに失敗しました。手動で選択してください。"; }
+    }
+  };
+
+  const shareText = "🏞 ベンチ広場に集合！みんなでベンチマーク結果を見せ合いながらYouTubeを一緒に見ましょう #TCBench";
+  document.getElementById("xshare").href =
+    "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText) + "&url=" + encodeURIComponent(url);
+
+  // QRコード (外部APIで生成。読めなくても手入力/コピーで代替できるので致命的ではない)
+  const qrImg = document.createElement("img");
+  qrImg.width = 116; qrImg.height = 116;
+  qrImg.alt = "広場URLのQRコード";
+  qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=116x116&margin=2&data=" + encodeURIComponent(url);
+  qrImg.onerror = function(){ document.getElementById("qrbox").textContent = "QR画像を読み込めませんでした"; };
+  document.getElementById("qrbox").appendChild(qrImg);
+})();
 
 document.getElementById("jbtn").onclick = function(){
   joined = true;
