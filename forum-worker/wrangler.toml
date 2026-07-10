@@ -1,0 +1,10 @@
+name = "tcbench-forum"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+
+# KV Namespace バインディング
+# 1) `wrangler kv namespace create FORUM` を実行して id を取得
+# 2) 下の id を差し替える
+[[kv_namespaces]]
+binding = "FORUM"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
