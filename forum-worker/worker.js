@@ -144,6 +144,7 @@ export class PlazaRoom {
     this.state = state;
     this.sessions = new Map();   // id -> {ws, name, color, x, y}
     this.video = null;           // {vid, by, ts}
+    this.playback = null;        // {state: "playing"|"paused", pos: 秒, wallTs: ms}
   }
 
   broadcast(obj, exceptId) {
@@ -190,7 +191,10 @@ export class PlazaRoom {
     };
     this.sessions.set(id, sess);
 
-    ws.send(JSON.stringify({ t: "init", id: id, players: this.playerList(), video: this.video, world: PLAZA_WORLD }));
+    ws.send(JSON.stringify({
+      t: "init", id: id, players: this.playerList(),
+      video: this.video, playback: this.playback, world: PLAZA_WORLD,
+    }));
 
     ws.addEventListener("message", (e) => {
       let m;
@@ -216,12 +220,23 @@ export class PlazaRoom {
         const vid = String(m.vid || "").trim();
         if (vid === "") {                                   // 空文字で消灯
           this.video = null;
+          this.playback = null;
           this.broadcast({ t: "video", vid: null, by: sess.name });
           return;
         }
         if (!/^[A-Za-z0-9_-]{6,15}$/.test(vid)) return;
         this.video = { vid: vid, by: sess.name, ts: Date.now() };
+        // 新しい動画は自動再生・先頭から。以後クライアントの実再生状態で上書きされる。
+        this.playback = { state: "playing", pos: 0, wallTs: Date.now() };
         this.broadcast({ t: "video", vid: vid, by: sess.name });
+      } else if (m.t === "vstate") {
+        // 再生/一時停止/シークの同期。pos=動画内の秒数、state="playing"|"paused"
+        if (!this.video) return;
+        const state = m.state === "paused" ? "paused" : "playing";
+        const pos = Number(m.pos);
+        if (!isFinite(pos) || pos < 0) return;
+        this.playback = { state: state, pos: pos, wallTs: Date.now() };
+        this.broadcast({ t: "vstate", state: state, pos: pos, by: sess.name }, id);
       }
     });
 

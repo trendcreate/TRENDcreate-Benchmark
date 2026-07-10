@@ -90,6 +90,7 @@
         <div id="stagevid" style="position:absolute;left:30%;top:6.667%;width:40%;height:40%;background:#0d3a26;border:2px solid #1f7f52;box-shadow:0 8px 24px -8px rgba(13,58,38,.6)">
           <div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bfe9d4;font-size:12px;font-family:var(--mono);text-align:center;padding:8px">まだ動画がありません<br>右のパネルから共有できます</div>
         </div>
+        <button id="unmutebtn" hidden style="position:absolute;left:30%;top:6.667%;width:40%;height:40%;background:rgba(7,18,12,.55);color:#fff;border:none;font-family:var(--ui);font-weight:700;font-size:13px;cursor:pointer">🔇 タップして音声を有効化</button>
       </div>
       <div class="row" style="margin-top:10px">
         <input type="text" id="chatin" placeholder="チャット… (Enterで送信 / 最大200文字)" maxlength="200" style="flex:1;min-width:180px" disabled>
@@ -129,6 +130,12 @@ let ws = null, myId = null, joined = false;
 let players = {};             // id -> {name,color,x,y,tx,ty,bubble,bubbleUntil}
 let keys = {};
 let lastSend = 0;
+
+// ---- YouTube 同期再生 ----------------------------------------------------
+let ytPlayer = null, ytReady = false, currentVid = null;
+let pendingPlayback = null;   // プレイヤー未準備の間に来た playback を保持
+let applyingRemote = false;   // リモート適用中はローカルイベントを送り返さない
+let lastLocalSend = 0;
 
 // ---- ドット絵アバター (10x12) : 1=体色 2=暗い体色 3=白(目) ------------------
 const SPRITE = [
@@ -279,16 +286,82 @@ function parseVid(input){
   if (/^[A-Za-z0-9_-]{6,15}$/.test(input)) return input;
   return null;
 }
+// YouTube IFrame API のロード (1回だけ)
+(function loadYT(){
+  if (window.YT && window.YT.Player) { ytReady = true; return; }
+  const tag = document.createElement("script");
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+})();
+window.onYouTubeIframeAPIReady = function(){
+  ytReady = true;
+  if (currentVid) createPlayer(currentVid);
+};
+
+function createPlayer(vid){
+  const box = document.getElementById("stagevid");
+  box.innerHTML = '<div id="ytplayer" style="position:absolute;inset:0;width:100%;height:100%"></div>';
+  ytPlayer = new YT.Player("ytplayer", {
+    videoId: vid,
+    playerVars: {
+      autoplay: 1, mute: 1, controls: 1, playsinline: 1, rel: 0,
+      enablejsapi: 1, origin: location.origin,
+    },
+    events: {
+      onReady: function(ev){
+        ev.target.mute();
+        ev.target.playVideo();
+        document.getElementById("unmutebtn").hidden = false;
+        if (pendingPlayback){ applyPlayback(pendingPlayback); pendingPlayback = null; }
+      },
+      onStateChange: function(ev){
+        if (applyingRemote) return;
+        const now = Date.now();
+        if (ev.data === YT.PlayerState.PLAYING){
+          if (now - lastLocalSend < 400) return;   // 短時間の連続イベントを間引く
+          lastLocalSend = now;
+          send({ t: "vstate", state: "playing", pos: ytPlayer.getCurrentTime() });
+        } else if (ev.data === YT.PlayerState.PAUSED){
+          lastLocalSend = now;
+          send({ t: "vstate", state: "paused", pos: ytPlayer.getCurrentTime() });
+        }
+      },
+    },
+  });
+}
+
+function applyPlayback(pb){
+  if (!ytPlayer || !pb) return;
+  const elapsed = pb.state === "playing" ? (Date.now() - pb.wallTs) / 1000 : 0;
+  const target = Math.max(0, pb.pos + elapsed);
+  applyingRemote = true;
+  try {
+    const cur = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+    if (Math.abs(cur - target) > 1.5) ytPlayer.seekTo(target, true);
+    if (pb.state === "playing") ytPlayer.playVideo(); else ytPlayer.pauseVideo();
+  } catch (e) { /* プレイヤー未準備 */ }
+  setTimeout(function(){ applyingRemote = false; }, 500);
+}
+
 function setVideo(vid, by){
   const box = document.getElementById("stagevid");
+  currentVid = vid;
   if (!vid){
+    ytPlayer = null;
+    document.getElementById("unmutebtn").hidden = true;
     box.innerHTML = '<div class="empty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#bfe9d4;font-size:12px;font-family:var(--mono);text-align:center;padding:8px">まだ動画がありません<br>右のパネルから共有できます</div>';
     document.getElementById("ytby").textContent = by ? ("📺 " + by + " さんが画面を消しました") : "";
     return;
   }
-  box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + vid + '" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-  document.getElementById("ytby").textContent = by ? ("📺 " + by + " さんが動画を変更しました (再生は各自で押してね)") : "";
+  document.getElementById("ytby").textContent = by ? ("📺 " + by + " さんが動画を変更しました (自動再生されます / 音声はミュート中)") : "";
+  if (ytReady) createPlayer(vid);
+  // ytReady=false の場合は onYouTubeIframeAPIReady で createPlayer が呼ばれる
 }
+
+document.getElementById("unmutebtn").onclick = function(){
+  if (ytPlayer){ ytPlayer.unMute(); ytPlayer.setVolume(80); }
+  document.getElementById("unmutebtn").hidden = true;
+};
 
 function connect(){
   ws = new WebSocket(WS_URL);
@@ -306,7 +379,10 @@ function connect(){
       players = {};
       (m.players || []).forEach(function(p){ players[p.id] = p; });
       if (!players[myId]) players[myId] = { name: "名無しさん", color: "#32b478", x: W/2, y: H/2 };
-      if (m.video && m.video.vid) setVideo(m.video.vid, m.video.by);
+      if (m.video && m.video.vid){
+        pendingPlayback = m.playback || null;
+        setVideo(m.video.vid, m.video.by);
+      }
       if (joined) send({ t: "join", name: myName(), color: myColor() });
       updateCount();
     } else if (m.t === "join"){
@@ -322,8 +398,11 @@ function connect(){
       if (p){ p.name = m.name; p.bubble = m.text; p.bubbleUntil = Date.now() + 6000; }
       logLine('<span class="n">' + esc(m.name) + '</span>: ' + esc(m.text));
     } else if (m.t === "video"){
+      pendingPlayback = null;
       setVideo(m.vid, m.by);
       logLine('<span class="sys">📺 ' + esc(m.by) + ' さんが動画を変更</span>');
+    } else if (m.t === "vstate"){
+      applyPlayback({ state: m.state, pos: m.pos, wallTs: Date.now() });
     } else if (m.t === "leave"){
       if (players[m.id]) logLine('<span class="sys">← ' + esc(players[m.id].name) + ' さんが退場</span>');
       delete players[m.id];
