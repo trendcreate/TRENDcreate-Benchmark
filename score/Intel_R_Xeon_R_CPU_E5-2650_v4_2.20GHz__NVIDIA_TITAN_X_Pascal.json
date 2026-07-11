@@ -13,9 +13,10 @@
   },
   "best": {
     "cpu_single": 807.3,
-    "cpu_multi": 11732.5,
+    "cpu_multi": 13864.6,
     "gpu_vcalc": 7943.9,
-    "multi_ratio": 0.61
+    "multi_ratio": 0.8,
+    "gpu_diffusion": 26614.7
   },
   "runs": [
     {
@@ -26,6 +27,17 @@
         "cpu_multi": 11732.5,
         "gpu_vcalc": 7943.9,
         "multi_ratio": 0.61
+      }
+    },
+    {
+      "timestamp": "2026-07-11T04:33:06+00:00",
+      "source": "issue",
+      "scores": {
+        "cpu_single": 807.3,
+        "cpu_multi": 13864.6,
+        "gpu_vcalc": 7943.9,
+        "gpu_diffusion": 26614.7,
+        "multi_ratio": 0.8
       }
     }
   ]
